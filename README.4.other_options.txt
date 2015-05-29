@@ -192,10 +192,66 @@ plotModelPeaks( par=li7[[3]]$par , selectedPoints=NULL ,
                 cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=T, 
                 preserveMatPatDiff=T , preserveMaxSubClDiff=T )
 
-##
+
+################################################################################
+
+
+Tumor ploidy and cellulaliry are interconnected, in such a way that S*n is constant
+(where n is the proportion of normal cells).  If the constant value of S*n can be 
+estimated, one less parameter is needed.  This value can be estimated from segments
+that are LOH. 
+
+load( file="Rda/copyAr.rda")
+load( file="Rda/t.ar.seg.rda") 
+
+cntr<-showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
+       seed=12345  , xlim=c(0,2) , nx=200, ny=50 )
+axis(1)
+
+Let's add points to the graph that correspond to actual segments:
+
+sel<-t.ar.seg$size>100000 & !t.ar.seg$mask & t.ar.seg$meanmap>.9
+cxcut<- as.integer( cut( t.ar.seg$size[sel], c(10000,100000,1000000,5000000,10000000,20000000,50000000,Inf) ) )/3
+points( x<-t.ar.seg$mean[sel], y<-t.ar.seg$p[sel],  pch=21 , col="blue", lwd=3 , cex=cxcut  )
+points( t.ar.seg$mean[sel], t.ar.seg$p[sel],  pch=19 ,  col="white" , cex= cxcut  - .5 )
+points( t.ar.seg$mean[sel], 1-t.ar.seg$p[sel],  pch=21 ,  col="blue", lwd=3  , cex=cxcut  )
+points( t.ar.seg$mean[sel], 1-t.ar.seg$p[sel],  pch=19 , col="white" , cex=cxcut -.5 )
+
+
+sp <-  selectPeaks( cntr, copyAr , getLocal=F ) 
+x<-sp$x
+y<-sp$y
+
+ARloh<-function( x,S, n ){
+ k<-2*(x-S*n)/(S-S*n) 
+ return( n/( 2*n+(1-n)*k ) )
+}
+
+nnllss<- nls( y ~ ARloh( x, 1 ,n ) , start=list(n=0.01  ) , upper=list( n=1 ), lower=list(n=0 ) , algo="port" )
+Sn<-  summary(nnllss)$coefficients[1,1]
 
 
 
+df<-c()
+for( S in seq( .5,1.25,.1 ) ){ 
+ nnllss<- nls( y ~ ARloh( x,S ,n ) , start=list(n=0.01  ) , upper=list( n=1 ), lower=list(n=0 ) , algo="port" )
+ n<-  summary(nnllss)$coefficients[1,1]
+ df<-rbind(df, c(S,n) )
+ xxx<- seq(S*n, 2, .01 ) 
+ points( xxx , ARloh( xxx , S, n ) , type='l'  )
+}
+
+df[,1]*df[,2] 
+
+
+sp<-t.ar.seg[sel,c("mean","p")] 
+names(sp)<-c("x","y")
+sp<-sp[ !is.na(sp[,2]),]
+
+
+li.sn <-coverParamSpace( sp , optimFct=2  , lowerF=c( 0  ), upperF=c( 1  ),
+                             Sfrom=.3, Sto=1 , maxc=8, maxsubcldiff=NULL   , Sn=0.004475867,
+                            control=list( maxit=1000 ) , xonly=F , preserveMatPat=F )
 
 
 
