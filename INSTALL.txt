@@ -1,0 +1,17 @@
+
+This is version 0.10 of celluloid. Check for a newer version at
+ 
+   https://github.com/mathieu-lemire/
+
+Install bioconductor dependencies first:
+
+source("http://bioconductor.org/biocLite.R")
+biocLite("HMMcopy")
+biocLite("copynumber")
+
+then install celluloid from github:
+
+install.packages("devtools")
+library(devtools)
+install_github("mathieu-lemire/celluloid_0.10")
+
