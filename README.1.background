@@ -1,0 +1,165 @@
+0        1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+
+###############################################################################
+
+The sequenced sample consist of a mixture of normal cells and tumour cells
+that come from, perhaps, different subclones.  Two subclones are different 
+with respect to at least one segment that has a different number of copies
+between the two.  
+
+After alignment, reads are counted in 1 kbp bins (say) using functions from the 
+R package HMMcopy. These counts are then adjusted for the GC content of each bin
+using LOESS (local) regression and scaled to the mean (scaled gc-corrected read
+count [SRC]).  Segmentation of the data in both tumor and normal tissue (say,
+from matched non malignant tissue or from blood) is performed using penalized
+least squares, as implemented in the R package copynumber. To each segment is
+assigned the mean SRC value, calculated from the 1kb bins within the segment. 
+SRC is proportional to the mean number of chromosomes (copies), averaged over
+all sequenced cells.
+
+Germline heterozygous positions are extracted in the autosome, except in regions
+of the genome where duplication or deletion events are observed in the normal
+tissues.  The number of reads supporting each allele (the reference allele – the
+one observed on the reference human assembly – and the alternate allele) is
+recorded from the tumor data and the allelic ratio (AR; the proportion of reads
+supporting the reference allele) calculated.  Each heterozygous position is also
+paired with the SRC value of the segment it belongs to, evaluated from the tumor
+data, to form pairs of values (SRC, AR).  These pairs of points can be 
+represented in a three-dimensional graph as a contour (elevation) plot (Fig. X). 
+This figure is a visual representation of the autosomal-wide copy number profile 
+of the tumor.  Each peak (or pair of peaks since the graph is relected around 
+AR=0.5) corresponds to a specific copy-number state that summarizes both the 
+average copy number (on the x-axis, once appropriately scaled) and the ratio of 
+relative abundance of maternal and paternal copies (on the y-axis, once 
+contamination from normal tissues – or tumor cellularity – is accounted for).  
+
+Let S be the SRC that is to be expected in the sequenced sample in a segment that 
+has exactly two copies in all cells (normal and tumour cells). Let t describes 
+the percentage of the sequenced cells that are normal and derived from the 
+different subclones: t=c(t[1],t[2],..,t[nsubclones+1]); sum(t)=1. t[1] is the 
+percentage of normal cells in the sequenced sample. We may also use n to 
+represent t[1].
+
+We define the autosomal ploidy of the sequenced sample (the mixture of tumor and 
+normal cells) as the relative abundance of DNA compared to that of a normal 
+haploid autosomal genomes and we calculate it to be 2/S, by means of 
+proportionality.
+
+For given S and t, and given copy number in all subclones (normal cells are
+assumed to have 2 copies), the peak locations (expected SRC and 
+expected AR) can be predicted from mathematical expressions. 
+
+For this we need to work with a set of allowed copy-number configurations. In
+the simplest case of a model with only one clone (where all segments have the
+same number of copies in all tumour cells), the set of allowed copy-number 
+configurations is only determined by the maximum number of copies a segment can
+have.  In CELLULOID, this set is defined with a call of prepCN:
+
+E.g., the call of prepCN(maxc=12) creates the data.frame:
+
+cn
+
+   N T1
+1  2  0
+2  2  1
+3  2  2
+4  2  3
+5  2  4
+6  2  5
+7  2  6
+8  2  7
+9  2  8
+10 2  9
+11 2 10
+12 2 11
+13 2 12
+
+The first line represents a configuration where normal cells (column N) have 
+two copies and tumour cells (column T1) have 0 copies in a segment.  The next 
+line represents a configuration where normal cells have two copies and tumour 
+cells 1 copy, etc. A segment is only allowed to have one of these 
+configurations. It is for these configurations that expected peak locations 
+are derived. 
+
+If two or more subclones are allowed, a segment can have different number of 
+copies in different tumour cells. Even though any combination of values could be 
+allowed, the copy-number configuration can be simplified by assuming that the 
+number of copies a segment has can not differ between two subclones by more than 
+some pre-specified number, such as in 
+
+prepCN(maxc=6, nsubcl=2, maxsubcldiff=1 )
+
+cn
+
+   N T1 T2
+1  2  0  0
+2  2  1  0
+8  2  0  1
+9  2  1  1
+10 2  2  1
+16 2  1  2
+17 2  2  2
+18 2  3  2
+24 2  2  3
+25 2  3  3
+26 2  4  3
+32 2  3  4
+33 2  4  4
+34 2  5  4
+40 2  4  5
+41 2  5  5
+42 2  6  5
+48 2  5  6
+49 2  6  6
+
+This describe the number of copies a segment can have in normal cells (2), in
+tumour cells T1 and tumour cells T2. The maxsubcldiff=1 specified that the 
+number of copies of a segment can not differ between T1 and T2 by more than 1.
+
+These copy number configurations can be further broken down into number of (say)
+maternal and paternal copies, so that the AR can be calculated once the 
+percentages in t are specified. This is what the prepAR calculates, a function
+that is not intended to be called by the user. The function returns a list of 
+length equal to the number of lines in cn. For illustration, in a sample
+that has 25% normal cells, 50% of cells in subclone 1 and 25% of cells in 
+subclone 2:
+
+ar<-prepAR( t=c(.25,.50,.25) )
+
+then in a segment that has 2 copies in normal cells, and 1 copy in both 
+subclones (4th line in cn, or cn[4,]), the allelic ratios are expected to take 
+the values:
+
+ar[[4]]
+
+0.2 0.8 
+
+An assumption was made that if one parental copy is present in equal or more 
+copies than the other in one subclone, then it will also be present in equal or
+more copies in all subclone (i.e. the allelic ratio is in the same direction in
+all subclone).  This assumption can be relaxed with:
+
+ar<-prepAR( t=c(.25,.50,.25), preserveMatPat=F  )
+
+ar[[4]]
+
+0.2 0.4 0.6 0.8 
+
+This describes a situation where, e.g., the maternal copy was lost in subclone 1
+while the paternal copy was lost in subclone 2 (independent clones), whereas with
+preserveMatPat=T, the same parental copy is assumed to have been lost in all 
+subclones (somewhat nested subclones).  
+
+On the x-axis, this segment with copy number configuration cn[4,] would be 
+expected to have a mean SRC value of 
+
+sum( cn[4,]*c(.25,.5,.25) )*S/2
+
+calculated by means of proportionality.
+
+We aim to find the set of parameters for which the observed peaks are best 
+captured by expected peaks.  The objective function to minimize is the total
+(Euclidean) distance between the observed peaks and their closest expected 
+peaks.
+

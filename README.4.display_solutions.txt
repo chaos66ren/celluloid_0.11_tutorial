@@ -17,7 +17,7 @@ prepCN(12)
 Given parameters S and t (with sum(t)=1) and copy number configurations cn, the 
 expected peak locations can be obtained with a call to 
 
-ePP <- ePeakPos( S=0.600465, t=c(0.008267668,0.991732332), cn=cn  )
+ePP <- ePeakPos( S= 0.6260699, t=c(0.02222, 0.97778), cn=cn  )
 
 or, alternatively, using the list returned by coverParamSpace:
 
@@ -25,13 +25,14 @@ ePP <- ePeakPos( par=li1[[1]]$par  , cn=cn  )
 
  head(ePP)
 
-  m0 p0 m1 p1           x          ar
-1  1  1  0  0 0.004964445 0.500000000
-2  1  1  0  1 0.302714711 0.008199874
-3  1  1  1  0 0.302714711 0.991800126
-4  1  1  0  2 0.600464978 0.004133834
-5  1  1  1  1 0.600464978 0.500000000
-6  1  1  2  0 0.600464978 0.995866166
+  m0 p0 m1 p1          x         ar
+1  1  1  0  0 0.01391417 0.50000000
+2  1  1  0  1 0.31999205 0.02174143
+3  1  1  1  0 0.31999205 0.97825857
+4  1  1  0  2 0.62606993 0.01111231
+5  1  1  1  1 0.62606993 0.50000000
+6  1  1  2  0 0.62606993 0.98888769
+
 
 Here the copy number configurations in cn is broken down into (say) maternal and
 paternal copy numbers (the terms maternal and paternal are used only to 
@@ -47,7 +48,7 @@ showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20,
 
 prepCN(12) # if cn does not exist 
 
-plotModelPeaks(  S=0.600465, t=c(0.008267668,0.991732332), 
+plotModelPeaks( S= 0.6260699, t=c(0.02222, 0.97778), 
                 selectedPoints=sp,cn=cn, epcol="red",epcex=1,eplwd=3 , 
                 addlabels=T,preserveMatPatDiff=T , preserveMaxSubClDiff=T  )
 
@@ -88,13 +89,13 @@ ePP <- ePeakPos( par=li2[[1]]$par, cn=cn  )
 
 head(ePP)
 
-  m0 p0 m1 p1 m2 p2           x         ar
-1  1  1  0  0  0  0 0.006070343 0.50000000
-2  1  1  0  1  0  0 0.193767413 0.01566399
-3  1  1  1  0  0  0 0.193767413 0.98433601
-4  1  1  0  2  0  0 0.381464482 0.00795663
-5  1  1  1  1  0  0 0.381464482 0.50000000
-6  1  1  2  0  0  0 0.381464482 0.99204337
+  m0 p0 m1 p1 m2 p2          x         ar
+1  1  1  0  0  0  0 0.01300897 0.50000000
+2  1  1  0  1  0  0 0.21117743 0.03080103
+3  1  1  1  0  0  0 0.21117743 0.96919897
+4  1  1  0  2  0  0 0.40934590 0.01588994
+5  1  1  1  1  0  0 0.40934590 0.50000000
+6  1  1  2  0  0  0 0.40934590 0.98411006
 
 Here the copy number configurations in cn is broken down into (say) maternal and
 paternal copy numbers (the terms maternal and paternal are used only to 
@@ -110,13 +111,6 @@ showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20,
 
 prepCN( 6,2,.5) 
 
-plotModelPeaks( S=0.6001518,t=c(0.007227974,0.643795537,0.348976489), 
-                selectedPoints=sp,cn=cn, epcol="red",epcex=1,eplwd=3 , 
-                addlabels=T,preserveMatPatDiff=T , preserveMaxSubClDiff=T  )
-
-or 
-
-
 plotModelPeaks( par=li2[[1]]$par , selectedPoints=sp , 
                 cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=T, 
                 preserveMatPatDiff=T , preserveMaxSubClDiff=T )
@@ -130,11 +124,12 @@ found in subclones. For example, a label taking the value 2.3 indicates that
 segments corresponding to peak found at that location on the x-axis have 2 
 copies in the first subclone and 3 in the second. If addLabels=T, then labels 
 will be assigned to points from ePP that are closest to points in sp.  These 
-labels further indicate the number of maternal/paternal chromosomes in each 
+labels further indicate the number of parental chromosomes in each 
 subclone, as in 20/21, which indicates that segments contributing to this
-particular peak have 2 maternal copies in the first subclone and 0 paternal, 
-and 2 maternal plus 1 paternal copies in the second.  Labels can also be 
-manually added with a call of the function
+particular peak have 2 maternal (say) copies in the first subclone and 0 paternal, 
+and 2 maternal plus 1 paternal copies in the second (we use maternal or paternal 
+solely to distinguish the two chromosomes; the parental origin can not 
+be inferred). Labels can also be manually added with a call of the function
 
 addLabels( ePP, manual=T)
 
@@ -146,8 +141,7 @@ profile (4 copies in the first subclone, 3 copies in the second). We selected a
 single peak near the y=0.5 line, but no such peak is to be expected there due to 
 the fact that a subclone has a an uneven number of copies. That peak is likely 
 made up of two peaks (with labels 22/12) that are so close one another that they  
-merge into a single one.  This misspecification may hinder the ability to find
-a good fit in more complex tumours and must be kept in mind.
+merge into a single one.  
 
 The user can compare the parsimony of the above solution with the one obtained
 in li4:
@@ -193,6 +187,6 @@ in ePP.  These labels are added in a column named labels.
 
 Then segments can be plotted:
 
-plotSegment( tcs,segments, ar , file=paste( "segments%03d.png",sep="_") ) 
+plotSegment( tcs,segments, ar , file="segments%03d.pdf", onefile=F ) 
 
 ###############################################################################

@@ -1,0 +1,322 @@
+0        1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+
+###############################################################################
+
+
+In this tutorial, "read counts" usually mean a scaled read count that was gc- 
+and mappability-corrected. A "peak" is a local maximum in a contour plot 
+(as in a topographical map), either an observed peak or an expected peak. 
+
+library( celluloid11 )
+
+###############################################################################
+
+In the following, we set seed values (set.seed()) so that results presented 
+here can be reproduced by the user.  Otherwise seeds do not need to be set. 
+
+###############################################################################
+
+Define the files
+
+tumourWigFile<-"Data/tumour.wig"
+normalWigFile<-"Data/normal.wig"
+gcWigFile<- "Data/gc.wig" 
+mapWigFile<- "Data/map.wig"
+arFile<- "Data/AR.txt"
+
+Load the data from normal, using function from HMMcopy:
+
+n<- wigsToRangedData( normalWigFile, gcWigFile, mapWigFile )
+
+Keep autosome and sex-linked chromosomes.
+
+n<-n[ is.element( n$space, c( paste("chr",1:22,sep=""), "chrX","chrY") ), ]
+
+Perform GC-content correction. This only uses autosomal chromosomes.
+
+set.seed(12345)
+
+nc<-gcCorrect(n) 
+
+Segment the data, using functions from the copynumber package. At the same time, 
+the function also calculates the mean mappability in each segment.
+
+n.seg <- segmentSeqData( nc, k=50 , maskmap = 0.8 )
+
+
+head(n.seg)
+
+  sampleID chrom arm start.pos   end.pos n.probes   mean   meanmap
+1       rc  chr1   p    752001  16861000     9328 1.0206 0.9833648
+2       rc  chr1   p  16861001  17019000       50 3.1215 0.9589670
+3       rc  chr1   p  17019001  17113000       50 2.0016 0.9869834
+4       rc  chr1   p  17114001  72747000    36226 1.0375 0.9846102
+5       rc  chr1   p  72747001  72815000       50 0.3510 0.9826200
+6       rc  chr1   p  72815001 120532000    35261 1.0392 0.9867323
+
+In the above segmentSeqData call, bins with mappability less than 0.8 are 
+treated as missing data, which explains why the genomic intervals in the output
+are not contiguous.  The n.probes column counts the number of 1kb bins.
+
+##     save( n.seg, file="Rda/n.seg.rda")
+
+##     save( nc, file="Rda/nc.rda")
+
+##     load("Rda/n.seg.rda")
+
+##     load("Rda/nc.rda")
+
+Repeat for tumor data:
+
+t <- wigsToRangedData( tumourWigFile, gcWigFile, mapWigFile )
+t<-t[ is.element( t$space, c( paste("chr",1:22,sep=""), "chrX","chrY") ), ]
+set.seed(12345)
+tc<-gcCorrect( t , sampletype="tumor" )
+t.seg <- segmentSeqData( tc , k=50 , maskmap = 0.8 )
+
+head(t.seg)
+
+  sampleID chrom arm start.pos   end.pos n.probes   mean   meanmap
+1       rc  chr1   p    752001  16851000     9321 0.9138 0.9833743
+2       rc  chr1   p  16858001  17015000       50 2.7971 0.9566322
+3       rc  chr1   p  17017001  17113000       52 1.7993 0.9873735
+4       rc  chr1   p  17114001  72747000    36219 0.9365 0.9846102
+5       rc  chr1   p  72747001  72815000       50 0.3138 0.9826200
+6       rc  chr1   p  72815001 120532000    35256 0.9434 0.9867323
+
+
+##    save( t.seg, file="Rda/t.seg.rda")
+
+##    save( tc, file="Rda/tc.rda")
+
+##    load( "Rda/t.seg.rda")
+
+##    load( "Rda/tc.rda")
+
+
+
+###################
+ 
+Identify segments that do not appear normal in the normal. 
+
+First intersect the segments between tumor and normal:
+
+t.n.seg<-intersectSegments( t.seg, n.seg )
+
+head(t.n.seg)
+
+   sampleID chrom arm start.pos  end.pos     size   mean   meanmap mean.1 meanmap.1
+1        NA  chr1   p    752001 16851000 16099000 0.9138 0.9833743 1.0206 0.9833648
+2        NA  chr1   p  16851001 16858000     7000     NA        NA 1.0206 0.9833648
+21       NA  chr1   p  16858001 16861000     3000 2.7971 0.9566322 1.0206 0.9833648
+22       NA  chr1   p  16861001 17015000   154000 2.7971 0.9566322 3.1215 0.9589670
+23       NA  chr1   p  17015001 17017000     2000     NA        NA 3.1215 0.9589670
+3        NA  chr1   p  17017001 17019000     2000 1.7993 0.9873735 3.1215 0.9589670
+
+Columns mean and meanmap are from t.seg (the first argument), mean.1 and 
+meanmap.1 are from n.seg (the second argument).  Note that NAs are introduced 
+because of the maskmap argument of segmentSeqData; see the above note. 
+
+t.n.seg<-t.n.seg[ !is.na( t.n.seg$mean) & !is.na( t.n.seg$mean.1),]
+
+The size column has replaced the n.probes column from copynumber, and represents 
+the size in bp of the segments. Intersecting segments has introduced small ones, 
+the user might choose to discard them, which will be done later on. 
+
+A segment in the normal whose mean value is an outlier compared to all other 
+segments will be treated as a non-normal segment.  In the following we define
+an outlier through calculation of the interquartile range, defined only from
+"large" segments with high mappability:
+
+sel<-n.seg$end.pos-n.seg$start.pos > 100000 & n.seg$meanmap>.8 
+bp<-boxplot( n.seg$mean[sel], range=3, plot=F  )
+
+The "normal" range of mean values:
+
+nrange<-c(bp$stats[1,1], bp$stats[5,1] )
+
+This range can then be applied to all segments:
+
+mask<- t.n.seg$mean.1>nrange[2] | t.n.seg$mean.1<nrange[1]
+
+Cut out the normal data, and mark segments that are not normal in the
+normal:
+
+t.seg.mask<-t.n.seg[,1:8]
+
+t.seg.mask$mask<- mask
+
+
+
+##    save(t.seg.mask, file="Rda/t.seg.mask.rda") 
+
+##    load("Rda/t.seg.mask.rda") 
+
+
+
+
+###############################################################################
+
+Reading the allelic ratio file.
+
+ar<-read.table(arFile, head=T )
+
+head(ar) 
+   CHR    POS REF_COUNT VAR_COUNT
+1 chr1 754730        31        17
+2 chr1 754813        10        23
+3 chr1 754840        30        10
+4 chr1 754873        16        20
+5 chr1 755955        26        14
+6 chr1 758555        11        11
+
+##    save( ar, file="Rda/ar.rda") 
+
+##    load("Rda/ar.rda") 
+
+Segmenting the AR data so that LOH regions can be distinguished from normal 
+regions:
+
+ar.seg<- segmentAR( ar, tc ) 
+
+head(ar.seg)
+
+  sampleID chrom arm start.pos   end.pos n.probes meanar
+1       ar  chr1   p    754730 120529959    94245 0.3293
+2       ar  chr1   q 145382191 249222827    86671 0.4226
+3       ar  chr2   p     14453  90270556    85168 0.4268
+4       ar  chr2   q  97919691 243056809   116578 0.4265
+5       ar  chr3   p     60915  90498746    77675 0.3313
+6       ar  chr3   q  93508645 197848857    81508 0.3312
+
+In the above, allelic ratios are calculated at each SNP as the proportion of 
+reads supporting the reference allele if it is < 0.5. Otherwise it is calculated
+as the proportion of reads supporting the alternate allele. This ratio will thus
+always be < 0.5, even if an equal number of maternal and paternal chromosomes
+are represented. The meanar column reports the average allelic ratio over all 
+heterozygous positions in the segment.
+
+##     save( ar.seg, file="Rda/ar.seg.rda")
+
+##     load("Rda/ar.seg.rda")
+
+Intersect segments, to further break down contiguous segments that have constant
+copy number but different AR.
+
+t.ar.seg <- intersectSegments( t.seg.mask, ar.seg  )
+
+head(t.ar.seg)
+
+   sampleID chrom arm start.pos  end.pos     size   mean   meanmap  mask meanar
+1        NA  chr1   p    752001   754729     2729 0.9138 0.9833743 FALSE     NA
+11       NA  chr1   p    754730 16851000 16096271 0.9138 0.9833743 FALSE 0.3293
+3        NA  chr1   p  16851001 16858000     7000     NA        NA    NA 0.3293
+21       NA  chr1   p  16858001 16861000     3000 2.7971 0.9566322 FALSE 0.3293
+22       NA  chr1   p  16861001 17015000   154000 2.7971 0.9566322  TRUE 0.3293
+6        NA  chr1   p  17015001 17017000     2000     NA        NA    NA 0.3293
+
+
+In the above, contiguous segments that display the same total number of copies, 
+but different number of maternal/paternal chromosomes (as in LOH) should be
+distinguished. 
+
+Removing the NAs that were introduced:
+
+t.ar.seg<-t.ar.seg[ !apply( is.na( t.ar.seg[,c("mean","meanar")] ), 1, any),]
+
+As noted above, allelic ratios in meanar are always < 0.5. The following 
+function addresses this by formally estimating the ratio of maternal/paternal
+chromosomes, by modeling the number of reads using Poisson distributions. The
+estimates are added in a column named p.
+
+t.ar.seg <-arInSeg( t.ar.seg, ar,  tumourrangedata=tc , minhet = 50 )
+
+Estimates are provided if a minimum of 50 SNPs is found in the segment.
+
+t.ar.seg[17:26,]
+
+    sampleID chrom arm start.pos   end.pos      size   mean   meanmap  mask meanar         p
+20        NA  chr2   p  89620001  89627000      7000 2.3289 0.9657530 FALSE 0.4268        NA
+201       NA  chr2   p  89627001  89894000    267000 2.3289 0.9657530 FALSE 0.4268 0.4999471
+212       NA  chr2   p  89894001  89901000      7000 1.2647 0.9753866 FALSE 0.4268        NA
+214       NA  chr2   p  89902001  90270556    368556 1.2647 0.9753866 FALSE 0.4268 0.4999359
+241       NA  chr2   q  97919691 133011000  35091310 1.2466 0.9858141 FALSE 0.4265 0.4764890
+251       NA  chr2   q 133011001 133109000     98000 2.2544 0.9730405 FALSE 0.4265 0.4508478
+252       NA  chr2   q 133114001 133115000      1000 2.2544 0.9730405 FALSE 0.4265        NA
+261       NA  chr2   q 133124001 243043000 109919000 1.2464 0.9865184 FALSE 0.4265 0.4881482
+27        NA  chr3   p     62001  90498746  90436746 0.9380 0.9865889 FALSE 0.3313 0.3355106
+281       NA  chr3   q  93519001 197843000 104324000 0.9382 0.9863952 FALSE 0.3312 0.3348311
+
+The user might want to discard smaller segments that were introduced during 
+intersecting steps.
+
+t.ar.seg<- t.ar.seg[ t.ar.seg$size>50000 & !is.na(t.ar.seg$p),] 
+
+##     save( t.ar.seg, file="Rda/t.ar.seg.rda")
+
+##     load("Rda/t.ar.seg.rda")
+
+###############################################################################
+
+This function creates the object used to draw a contour plot of the tumour 
+profile. It pairs the allelic ratio of each SNP with the $mean of the segment it 
+belongs to.
+
+mask<- t.ar.seg$mask | is.na(t.ar.seg$mask)
+copyAr<-  prepCopyAr( t.ar.seg[ !mask ,], ar,  tc  )
+
+##   save(copyAr, file="Rda/copyAr.rda")
+
+##   load("Rda/copyAr.rda")
+
+The following function plots the autosomal-wide copy number profile of the tumour. Each 
+peak (or pair of peaks since the graph is reflected around AR=0.5) corresponds 
+to a specific copy-number state that summarizes both the total copy number in 
+the tumour cells (on the x-axis, once appropriately scaled) and the ratio of 
+relative abundance of maternal and paternal copies (on the y-axis, once 
+contamination from normal tissues – or tumor cellularity – is accounted for).
+
+Underneath this contour plot are the points in copyAr, one point per 
+heterozygous position.
+
+cntr<-showTumourProfile( copyAr , flatten=.5 , nlev=20 , noise= 0.01 , 
+                        maxPoints=200000 )
+
+
+The flatten option is used to make smaller peaks stand out; the heights are 
+elevated to the power flatten (^.5 in this example). It is solely used for
+visual assessment. 
+
+## save(cntr, file="Rda/cntr.rda")
+
+The cntr object is the list returned by kde2d from library MASS. It can be used
+for subsequent plots of the tumour profile:
+
+image( cntr, col=terrain.colors(20))
+contour(cntr, nlev=20, add=T )
+ 
+
+WOULD REMOVE THIS:
+
+The individual segments can be added as points if desired, for example:
+
+# only large segments (>1Mbp)
+sel<-t.ar.seg$size>10000000 & !t.ar.seg$mask & t.ar.seg$meanmap>.9
+subsegments<-t.ar.seg[sel,]
+le<- subsegments$end.pos-subsegments$start.pos
+# size of points dependent on segment length
+cxcut<- as.integer( cut( le, c(1000000,5000000,10000000,20000000,50000000,Inf) ) )/3
+points( x<-subsegments$mean, y<-subsegments$p,  pch=21 , col="blue", lwd=3 , cex=cxcut  )
+points( subsegments$mean, subsegments$p,  pch=19 ,  col="white" , cex= cxcut  - .5 )
+points( subsegments$mean, 1-subsegments$p,  pch=21 ,  col="blue", lwd=3  , cex=cxcut  )
+points( subsegments$mean, 1-subsegments$p,  pch=19 , col="white" , cex=cxcut -.5 )
+ 
+
+
+###############################################################################
+
+
+
+
+
