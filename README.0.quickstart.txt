@@ -48,13 +48,24 @@ Details of each steps of data preparation are found in
 
 The analysis uses the segment-based objective function. The value of this objective
 function is a measure of how distant the tumor genome is from the model defined
-by values of ploidy and cellularity.  We call that value fractionCaptured. Local
-maxima of that function are found by using the optim() function in R with 50 
-randomly chosen starting points.  
+by values of ploidy and cellularity.  The search is done by a call of the function
+coverParamSpace
+
+Local maxima of the objective function are found by using the optim() function 
+in R with 50 randomly chosen starting points.  
 
 Details about the segment-based objective function are found in 
 
  README.3.select_and_search.txt
+
+In pipeline.r, coverParamSpace makes use of a dimension reduction trick (by setting
+a value to the argument Sn), because cellularity and ploidy are interconnected. A
+first step of this trick consists of estimating a "LOH curve", which may fail in 
+practive in some datasets, in which case manual interventions may be required.
+See the "OTHER OPTIONS: Sn" section in 
+
+ README.5.other_options.txt
+
 
 
 
