@@ -3,6 +3,8 @@
 
 ################################################################################
 
+OTHER OPTIONS: forced peak
+
 To force a peak to represent a particular combination of copy numbers, add a
 third column to the sp data.frame that will represent the copy number 
 combination associated with the corresponding line:
@@ -55,6 +57,7 @@ li5<-coverParamSpace( sp, optimFct=2, lowerF=c(0,0), upperF=c(1,1),
 
 ###############################################################################
 
+OTHER OPTIONS: grid search 
 
 If optimFct is a vector, then grid search is performed with optim() using a 
 number of starting values equal to prod(optimFct). Starting values for 
@@ -134,6 +137,7 @@ See contour001.png.
 
 ################################################################################
 
+OTHER OPTIONS: subsets 
 
 In the situation where the tumour has more subclones than specified in the 
 coverParamSpace function, it is possible that the sp data.frame contains peaks 
@@ -195,6 +199,7 @@ plotModelPeaks( par=li7[[3]]$par , selectedPoints=NULL ,
 
 ################################################################################
 
+OTHER OPTIONS: Sn
 
 Tumor ploidy and cellulaliry are interconnected, in such a way that S*n is constant
 (where n is the proportion of normal cells).  If the constant value of S*n can be 
