@@ -50,14 +50,13 @@ prepCN(12) # if cn does not exist
 
 plotModelPeaks( S= 0.6260699, t=c(0.02222, 0.97778), 
                 selectedPoints=sp,cn=cn, epcol="red",epcex=1,eplwd=3 , 
-                addlabels=T,preserveMatPatDiff=T , preserveMaxSubClDiff=T  )
+                addlabels=T )
 
 or 
 
 
 plotModelPeaks( par=li1[[1]]$par , selectedPoints=sp , 
-                cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=T, 
-                preserveMatPatDiff=T , preserveMaxSubClDiff=T )
+                cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=T)
 
 See Figure4.png.
 
@@ -187,6 +186,12 @@ in ePP.  These labels are added in a column named labels.
 
 Then segments can be plotted:
 
-plotSegment( tcs,segments, ar , file="segments%03d.pdf", onefile=F ) 
+# type "cairo" passed to png, to allow for transparency. May not be available.
+# width and height are here expressed in pixels (the default of png)
+plotSegment( tcs,segments, ar , file="segments_page%1d",device="png",width=2*960,height=2*1320, 
+  cex.axis=2, cex.main=2, cex.lab=2, type="cairo", chr=paste( "chr",1:8 , sep="")  ) 
+
+
+
 
 ###############################################################################

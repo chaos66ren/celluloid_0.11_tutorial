@@ -343,5 +343,82 @@ See README.4.display_solutions.txt to get a visual assessment of the solutions.
 ###############################################################################
 
 
-2) Segment-based 
+2) Segment-based objective function
+
+To find ploidy and cellularity estimates, we work with a set of segments, such
+such as those in t.ar.seg. In this first section we illustrate how the objective
+function is calculated. 
+
+Let's plot these segments onto a contour plot, and add to the graph the
+one-clone solution above. This is for illustration purposes only, those
+steps are not required in a typical analysis. 
+
+par(mfrow=c(2,1))
+prepCN(12) 
+cntr<-showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
+       seed=12345  , xlim=c(0,2) , nx=200, ny=50  )
+# only focusing on large segments
+sel<-t.ar.seg$size>10000000 
+subsegments<-t.ar.seg[sel,]
+points(x<-subsegments$mean, y<-subsegments$p, pch=21, col="white", lwd=3, cex=2)
+points( x, 1-y,  pch=21 , col="white", lwd=3 , cex=2   )
+ePP<-plotModelPeaks( par=li1[[1]]$par ,cn=cn, epcol="red",epcex=1,eplwd=3 )
+
+We define an objective function that takes values between 0 and 1, taking the 
+value 1 if 100% of the genome in t.ar.seg is closely captured by the set of 
+expected peaks and 0 if all the of the genome is distant from the model. 
+
+The distance between each segment and its closest expected peak is calculated.
+If that distance is 0, that segment is assigned a weight of 1. The larger the 
+distance, the smaller the weight, down to a weight of 0 if that distance is
+more than half the distance between two consecutive expected peak positions
+(projected on the x-axis).
+
+These distances (column $dist) and weights (column $we) are calculated 
+when the annotateSegments function is called
+
+subsegments<-annotateSegments(subsegments, ePP)
+
+To illustrate, the segments points above can be plotted with size proportional 
+to their weight:
+
+# only plotting large segments
+image(cntr, col=terrain.colors(20))
+contour(cntr, nlev=20, add=T)
+sel<-t.ar.seg$size>10000000 
+points( x<-subsegments$mean, y<-subsegments$p,  pch=21 , col="white", lwd=2 ,
+            cex=2*subsegments$we   )
+points( x, 1-y,  pch=21 , col="white", lwd=2 ,cex=2*subsegments$we  )
+plotModelPeaks( par=li1[[1]]$par ,cn=cn, epcol="red",epcex=1,eplwd=3 )
+
+The objective function that would need to be maximized is defined 
+as:
+
+sum(subsegments$size*subsegments$we)/sum(subsegments$size)
+
+and would here take the value:
+
+[1] 0.6498448
+
+The weights can decrease either linearly or quadratically (more rapidly; the 
+default) with the distance. 
+
+###############################################################################
+
+This segment-based objective function is used when the segments argument of 
+coverParamSpace is provided. Whereas minimizing is done when using the 
+peak-based option, here maximization of the fraction of the genome captured
+is done:
+
+li5<-coverParamSpace( segments=subsegments, optimFct=2, lowerF=c(0), upperF=c(1),  
+       Sfrom=.25, Sto=2 , maxc=12 , control=list( maxit=1000  ) )
+
+li5[[1]]$par
+[1] 0.63319655 0.03776785
+
+A slightly different solution than using the peak-based function. 
+
+
+
+
 
