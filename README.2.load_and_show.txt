@@ -29,10 +29,6 @@ Load the data from normal, using function from HMMcopy:
 
 n<- wigsToRangedData( normalWigFile, gcWigFile, mapWigFile )
 
-Keep autosome and sex-linked chromosomes.
-
-n<-n[ is.element( n$space, c( paste("chr",1:22,sep=""), "chrX","chrY") ), ]
-
 Perform GC-content correction. This only uses autosomal chromosomes.
 
 set.seed(12345)
@@ -70,7 +66,7 @@ are not contiguous.  The n.probes column counts the number of 1kb bins.
 Repeat for tumor data:
 
 t <- wigsToRangedData( tumourWigFile, gcWigFile, mapWigFile )
-t<-t[ is.element( t$space, c( paste("chr",1:22,sep=""), "chrX","chrY") ), ]
+
 set.seed(12345)
 tc<-gcCorrect( t , sampletype="tumor" )
 t.seg <- segmentSeqData( tc , k=50 , maskmap = 0.8 )
@@ -127,12 +123,12 @@ the user might choose to discard them, which will be done later on.
 A segment in the normal whose mean value is an outlier compared to all other 
 segments will be treated as a non-normal segment.  In the following we define
 an outlier through calculation of the interquartile range, defined only from
-"large" segments with high mappability:
+"large" segments (>150kb) with high mappability.
 
-sel<-n.seg$end.pos-n.seg$start.pos > 100000 & n.seg$meanmap>.8 
+sel<-n.seg$end.pos-n.seg$start.pos > 150000 & n.seg$meanmap>.8 
 bp<-boxplot( n.seg$mean[sel], range=3, plot=F  )
 
-The "normal" range of mean values:
+The "normal" range of mean values, that the user might want to inspect, is:
 
 nrange<-c(bp$stats[1,1], bp$stats[5,1] )
 
@@ -176,7 +172,8 @@ head(ar)
 ##    load("Rda/ar.rda") 
 
 Segmenting the AR data so that LOH regions can be distinguished from normal 
-regions:
+regions. From here on, the sex chromosomes are ignored and excluded from 
+output. 
 
 ar.seg<- segmentAR( ar, tc ) 
 
@@ -189,6 +186,7 @@ head(ar.seg)
 4       ar  chr2   q  97919691 243056809   116578 0.4265
 5       ar  chr3   p     60915  90498746    77675 0.3313
 6       ar  chr3   q  93508645 197848857    81508 0.3312
+
 
 In the above, allelic ratios are calculated at each SNP as the proportion of 
 reads supporting the reference allele if it is < 0.5. Otherwise it is calculated
