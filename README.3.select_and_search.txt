@@ -304,12 +304,16 @@ Instead of first finding a one-clone solution and then refining to find a
 two-subclone solution (a stepwise approach that we recommend), the search could 
 have been done by directly calling a two-subclone model:
 
+
 li3<-coverParamSpace( sp, optimFct=2, lowerF=c(0,0), upperF=c(1,1),  
        Sfrom=.25, Sto=2 , maxc=6 , maxsubcldiff=0.5,  
        control=list( maxit=1000   ) )
 
 ## save( li3, file="Rda/li3.rda")
 
+li3[[1]]$par
+
+[1] 0.62537232 0.02001801 0.62686801
 
 Inspection of paramSpace reveals that two solutions are almost equally 
 good, the other one near S=0.5.  See Figure3.png. 
@@ -322,10 +326,10 @@ The search can be refined around that value if needed.
 
 li4<-coverParamSpace( sp, optimFct=2, lowerF=c(0,0), upperF=c(1,1),  
        Sfrom=.5, Sto=.55 , maxc=6 , maxsubcldiff=0.5,  
-       control=list( maxit=100  ) )
+       control=list( maxit=100  ) , addToParamSpace=T )
 
 li4[[1]]$par
-[1] 0.500113283 0.007053342 0.594503953
+[1] 0.52277656 0.02381959 0.58380472
 
 ## save( li4, file="Rda/li4.rda")
 

@@ -87,12 +87,13 @@ ePP <- ePeakPos( par=li2[[1]]$par, cn=cn  )
 head(ePP)
 
   m0 p0 m1 p1 m2 p2          x         ar
-1  1  1  0  0  0  0 0.01300897 0.50000000
-2  1  1  0  1  0  0 0.21117743 0.03080103
-3  1  1  1  0  0  0 0.21117743 0.96919897
-4  1  1  0  2  0  0 0.40934590 0.01588994
-5  1  1  1  1  0  0 0.40934590 0.50000000
-6  1  1  2  0  0  0 0.40934590 0.98411006
+1  1  1  0  0  0  0 0.01251096 0.50000000
+2  1  1  0  1  0  0 0.20856425 0.02999307
+3  1  1  1  0  0  0 0.20856425 0.97000693
+4  1  1  0  2  0  0 0.40461753 0.01546023
+5  1  1  1  1  0  0 0.40461753 0.50000000
+6  1  1  2  0  0  0 0.40461753 0.98453977
+
 
 Here the copy number configurations in cn is broken down into (say) maternal and
 paternal copy numbers (the terms maternal and paternal are used only to 
@@ -123,10 +124,10 @@ copies in the first subclone and 3 in the second. If addLabels=T, then labels
 will be assigned to points from ePP that are closest to points in sp.  These 
 labels further indicate the number of parental chromosomes in each 
 subclone, as in 20/21, which indicates that segments contributing to this
-particular peak have 2 maternal (say) copies in the first subclone and 0 paternal, 
-and 2 maternal plus 1 paternal copies in the second (we use maternal or paternal 
-solely to distinguish the two chromosomes; the parental origin can not 
-be inferred). Labels can also be manually added with a call of the function
+particular peak have 2 maternal (say) copies in the first subclone and 0 
+paternal, and 2 maternal plus 1 paternal copies in the second (we use maternal 
+or paternal solely to distinguish the two chromosomes; the parental origin can 
+not be inferred). Labels can also be manually added with a call of the function
 
 addLabels( ePP, manual=T)
 
@@ -138,7 +139,8 @@ profile (4 copies in the first subclone, 3 copies in the second). We selected a
 single peak near the y=0.5 line, but no such peak is to be expected there due to 
 the fact that a subclone has a an uneven number of copies. That peak is likely 
 made up of two peaks (with labels 22/12) that are so close one another that they  
-merge into a single one.  
+merge into a single one.  This would have been apparent if individual segments
+had been plotted. 
 
 The user can compare the parsimony of the above solution with the one obtained
 in li4:
