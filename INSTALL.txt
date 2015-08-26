@@ -1,17 +1,26 @@
 
-This is version 0.11 of celluloid. Check for a newer version at
- 
-   https://github.com/mathieu-lemire/
+This is version 0.11.0 of celluloid. Check your version of celluloid with
+
+ library(help=celluloid)
+
+Check for a newer version at
+
+ https://github.com/mathieu-lemire/celluloid_0.11/blob/master/INSTALL
 
 Install bioconductor dependencies first:
 
-source("http://bioconductor.org/biocLite.R")
-biocLite("HMMcopy")
-biocLite("copynumber")
+ source("http://bioconductor.org/biocLite.R")
+ biocLite("HMMcopy")
+ biocLite("copynumber")
 
-then install celluloid from github:
+then install celluloid 0.11.0 from github:
 
-install.packages("devtools")
-library(devtools)
-install_github("mathieu-lemire/celluloid_0.11")
+ install.packages("devtools")
+ library(devtools)
+ install_github("mathieu-lemire/celluloid_0.11", ref="v0.11.0" )
 
+Alternatively you can download the source code located at
+
+ https://github.com/mathieu-lemire/celluloid_0.11/releases
+
+and install it with R CMD INSTALL.
