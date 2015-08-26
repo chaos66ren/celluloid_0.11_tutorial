@@ -2,6 +2,6 @@
 .Rhistory
 .RData
 Rda
-.gitignore
 RdaPipeline
 celluloid_0.11_tutorial.Rproj
+Data
