@@ -72,7 +72,8 @@ is to help the user judge if the parameter space was well covered.
 
 Then local solutions are shown in a series of contour plots. The x-axis 
 represents the (scaled) read counts in tumour segments, and the y-axis 
-represents values for the allelic ratios (proportion of reads supporting the reference allele) evaluated at germline heterozygous positions in those 
+represents values for the allelic ratios (proportion of reads supporting the 
+reference allele) evaluated at germline heterozygous positions in those 
 segments. White dots in the graphs represent actual segments. 
 
 The red dots and lines represent the integer copy-number states and allelic 
