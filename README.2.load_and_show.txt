@@ -3,17 +3,9 @@
 
 ###############################################################################
 
-
 In this tutorial, "read counts" usually mean a scaled read count that was gc- 
 and mappability-corrected. A "peak" is a local maximum in a contour plot 
 (as in a topographical map), either an observed peak or an expected peak. 
-
-library( celluloid11 )
-
-###############################################################################
-
-In the following, we set seed values (set.seed()) so that results presented 
-here can be reproduced by the user.  Otherwise seeds do not need to be set. 
 
 ###############################################################################
 
@@ -29,9 +21,9 @@ Load the data from normal, using function from HMMcopy:
 
 n<- wigsToRangedData( normalWigFile, gcWigFile, mapWigFile )
 
-Perform GC-content correction. This only uses autosomal chromosomes.
-
-set.seed(12345)
+Perform GC-content correction. This only uses autosomal chromosomes. A randomly
+chosen set of bins (50000 by default) is used to estimate the effect of gc
+content.
 
 nc<-gcCorrect(n) 
 
@@ -55,20 +47,19 @@ In the above segmentSeqData call, bins with mappability less than 0.8 are
 treated as missing data, which explains why the genomic intervals in the output
 are not contiguous.  The n.probes column counts the number of 1kb bins.
 
-##     save( n.seg, file="Rda/n.seg.rda")
+## the user can choose to save each objects in .rda files. In which case
+## uncomment the save instructions.
+## system("mkdir Rda")
+## save( n.seg, file="Rda/n.seg.rda")
+## save( nc, file="Rda/nc.rda")
 
-##     save( nc, file="Rda/nc.rda")
-
-##     load("Rda/n.seg.rda")
-
-##     load("Rda/nc.rda")
 
 Repeat for tumor data:
 
 t <- wigsToRangedData( tumourWigFile, gcWigFile, mapWigFile )
 
-set.seed(12345)
 tc<-gcCorrect( t , sampletype="tumor" )
+
 t.seg <- segmentSeqData( tc , k=50 , maskmap = 0.8 )
 
 head(t.seg)
@@ -85,11 +76,6 @@ head(t.seg)
 ##    save( t.seg, file="Rda/t.seg.rda")
 
 ##    save( tc, file="Rda/tc.rda")
-
-##    load( "Rda/t.seg.rda")
-
-##    load( "Rda/tc.rda")
-
 
 
 ###################
@@ -147,9 +133,6 @@ t.seg.mask$mask<- mask
 
 ##    save(t.seg.mask, file="Rda/t.seg.mask.rda") 
 
-##    load("Rda/t.seg.mask.rda") 
-
-
 
 
 ###############################################################################
@@ -168,8 +151,6 @@ head(ar)
 6 chr1 758555        11        11
 
 ##    save( ar, file="Rda/ar.rda") 
-
-##    load("Rda/ar.rda") 
 
 Segmenting the AR data so that LOH regions can be distinguished from normal 
 regions. From here on, the sex chromosomes are ignored and excluded from 
@@ -196,8 +177,6 @@ are represented. The meanar column reports the average allelic ratio over all
 heterozygous positions in the segment.
 
 ##     save( ar.seg, file="Rda/ar.seg.rda")
-
-##     load("Rda/ar.seg.rda")
 
 Intersect segments, to further break down contiguous segments that have constant
 copy number but different AR.
@@ -253,7 +232,6 @@ t.ar.seg<- t.ar.seg[ t.ar.seg$size>50000 & !is.na(t.ar.seg$p),]
 
 ##     save( t.ar.seg, file="Rda/t.ar.seg.rda")
 
-##     load("Rda/t.ar.seg.rda")
 
 ###############################################################################
 
@@ -265,8 +243,6 @@ mask<- t.ar.seg$mask | is.na(t.ar.seg$mask)
 copyAr<-  prepCopyAr( t.ar.seg[ !mask ,], ar,  tc  )
 
 ##   save(copyAr, file="Rda/copyAr.rda")
-
-##   load("Rda/copyAr.rda")
 
 The following function plots the autosomal-wide copy number profile of the tumour. Each 
 peak (or pair of peaks since the graph is reflected around AR=0.5) corresponds 
@@ -294,23 +270,6 @@ for subsequent plots of the tumour profile:
 image( cntr, col=terrain.colors(20))
 contour(cntr, nlev=20, add=T )
  
-
-WOULD REMOVE THIS:
-
-The individual segments can be added as points if desired, for example:
-
-# only large segments (>1Mbp)
-sel<-t.ar.seg$size>10000000 & !t.ar.seg$mask & t.ar.seg$meanmap>.9
-subsegments<-t.ar.seg[sel,]
-le<- subsegments$end.pos-subsegments$start.pos
-# size of points dependent on segment length
-cxcut<- as.integer( cut( le, c(1000000,5000000,10000000,20000000,50000000,Inf) ) )/3
-points( x<-subsegments$mean, y<-subsegments$p,  pch=21 , col="blue", lwd=3 , cex=cxcut  )
-points( subsegments$mean, subsegments$p,  pch=19 ,  col="white" , cex= cxcut  - .5 )
-points( subsegments$mean, 1-subsegments$p,  pch=21 ,  col="blue", lwd=3  , cex=cxcut  )
-points( subsegments$mean, 1-subsegments$p,  pch=19 , col="white" , cex=cxcut -.5 )
- 
-
 
 ###############################################################################
 

@@ -34,17 +34,16 @@ average copy number (on the x-axis, once appropriately scaled) and the ratio of
 relative abundance of maternal and paternal copies (on the y-axis, once 
 contamination from normal tissues – or tumor cellularity – is accounted for).  
 
-Let S be the SRC that is to be expected in the sequenced sample in a segment that 
-has exactly two copies in all cells (normal and tumour cells). Let t describes 
-the percentage of the sequenced cells that are normal and derived from the 
-different subclones: t=c(t[1],t[2],..,t[nsubclones+1]); sum(t)=1. t[1] is the 
-percentage of normal cells in the sequenced sample. We may also use n to 
+Let S be the SRC that is to be expected in the sequenced sample in a segment 
+that has exactly two copies in all cells (normal and tumour cells). Let t 
+describes the percentage of the sequenced cells that are normal and derived from 
+the different subclones: t=c(t[1],t[2],..,t[nsubclones+1]); sum(t)=1. t[1] is 
+the percentage of normal cells in the sequenced sample. We may also use n to 
 represent t[1].
 
 We define the autosomal ploidy of the sequenced sample (the mixture of tumor and 
 normal cells) as the relative abundance of DNA compared to that of a normal 
-haploid autosomal genomes and we calculate it to be 2/S, by means of 
-proportionality.
+haploid autosomal genomes. This sample ploidy is calculated to be 2/S.
 
 For given S and t, and given copy number in all subclones (normal cells are
 assumed to have 2 copies), the peak locations (expected SRC and 
@@ -54,7 +53,7 @@ For this we need to work with a set of allowed copy-number configurations. In
 the simplest case of a model with only one clone (where all segments have the
 same number of copies in all tumour cells), the set of allowed copy-number 
 configurations is only determined by the maximum number of copies a segment can
-have.  In CELLULOID, this set is defined with a call of prepCN:
+have.  In celluloid, this set is defined with a call of prepCN:
 
 E.g., the call of prepCN(maxc=12) creates the data.frame:
 
@@ -147,21 +146,24 @@ ar[[4]]
 0.2 0.4 0.6 0.8 
 
 This describes a situation where, e.g., the maternal copy was lost in subclone 1
-while the paternal copy was lost in subclone 2 (independent clones), whereas with
-preserveMatPat=T, the same parental copy is assumed to have been lost in all 
-subclones (somewhat nested subclones).  
+while the paternal copy was lost in subclone 2 (independent clones), whereas 
+with preserveMatPat=T, the same parental copy is assumed to have been lost in 
+all subclones (somewhat nested subclones).  
 
 On the x-axis, this segment with copy number configuration cn[4,] would be 
 expected to have a mean SRC value of 
 
-sum( cn[4,]*c(.25,.5,.25) )*S/2
-
-calculated by means of proportionality.
+t<-c(.25,.5,.25)
+sum( cn[4,]*t )*S/2
 
 We aim to find the set of parameters for which the observed peaks are best 
 captured by expected peaks.  The objective function to minimize is the total
 (Euclidean) distance between the observed peaks and their closest expected 
 peaks.
+
+Once S and t are found, the ploidy of the tumour is calculated to be
+
+ploidy<-( 2/S - 2*t[1])/(1-t[1])
 
 
 

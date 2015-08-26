@@ -3,7 +3,7 @@
 
 ################################################################################
 
-Read INSTALL.txt for instruction on how to install celluloid11.
+Read INSTALL.txt for instruction on how to install celluloid.
 
 ################################################################################
 
@@ -46,26 +46,36 @@ Details of each steps of data preparation are found in
 
  README.2.load_and_show.txt
 
-All data objects are saved in .rda files in the RdaPipeline directory.
+All data objects are saved in .rda files in a RdaPipeline directory.
 
-The analysis uses the segment-based objective function. The value of this 
-objective function is a measure of how distant the tumor genome is from the 
-model defined by values of ploidy and cellularity.  The search is done by a call 
-of the function coverParamSpace.
-
-Local maxima of the objective function are found by using the optim() function 
-in R with 50 randomly chosen starting points.  
-
-Details about the segment-based objective function are found in 
+The analysis uses the segment-based objective function, further described in 
 
  README.3.select_and_search.txt
 
-Local solutions are found in a graphical output. The first panel represents
-the values of the objective function as a function of the parameter n (the 
-percentage of normal cells in the sequenced sample). This is to help the 
-user judge if the parameter space was well covered. Then the output shows a 
-series of contour plots with white dots representing each segment (mirrored 
-around 0.5). The red dots and lines represent the copy-number state and allelic 
+The value of this objective function is an ad hoc measurement of the weighted
+fraction of the tumour genome that is captured by the model, defined by values
+of ploidy, cellularity and subclonal proportions. Another objective function,
+suited for manual interventions, in also described in the above README file. 
+
+The search is done by a call of the function coverParamSpace.
+
+Local maxima of the objective function are found by using the optim() function 
+in R with 50 randomly chosen starting points.  
+ 
+Local solutions are found in a graphical output. See file 
+
+ Figures/contour_solutions_samplename_1.pdf
+
+The first panel represents the values of the objective function as a function of 
+the parameter n (the percentage of normal cells in the sequenced sample). This 
+is to help the user judge if the parameter space was well covered. 
+
+Then local solutions are shown in a series of contour plots. The x-axis 
+represents the (scaled) read counts in tumour segments, and the y-axis 
+represents values for the allelic ratios (proportion of reads supporting the reference allele) evaluated at germline heterozygous positions in those 
+segments. White dots in the graphs represent actual segments. 
+
+The red dots and lines represent the integer copy-number states and allelic 
 ratios that are predicted given the estimates of tumour ploidy and cellularity. 
 The value of the objective function at the local solution is displayed on the 
 top left corner. 
@@ -80,7 +90,7 @@ interconnected. A first step of this trick consists of estimating "LOH curves",
 which may fail in practive in some datasets, in which case manual interventions 
 may be required. The LOH curves represent the lower and upper values of the AR 
 expected in regions of LOH, given the copy number state of the tumour in those 
-regions. This LOH curves are the two symmetrical black curved lines on the 
+regions. These LOH curves are the two symmetrical black curved lines on the 
 output graphs. See the "OTHER OPTIONS: Sn" section in 
 
  README.5.other_options.txt
@@ -88,7 +98,7 @@ output graphs. See the "OTHER OPTIONS: Sn" section in
 The user must decide on a solution based on experience, and copy-number 
 segments can then be plotted:
 
-library(celluloid11)
+library(celluloid)
 files<-system("ls RdaPipeline/*rda",intern=T); for(f in files){load(f)}
 prepCN(12,1,NULL)
 ePP<-ePeakPos( S=0.624, t=c(0.073, 0.923), cn=cn  )
@@ -104,6 +114,10 @@ plotSegment( tcs,segmentsXY, ar=NULL , file="segments_pageXY",device="png",
              width=960,height=1320, cex.axis=2, cex.main=2, cex.lab=2, 
              type="cairo" , chr=c("chrX","chrY") , tlwd=8) 
 
+
+To fit two or more subclones, the user can refer to 
+
+  README.3.select_and_search
 
 
 

@@ -2,10 +2,8 @@
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 
 ###############################################################################
-load( file="Rda/copyAr.rda")
-load( file="Rda/sp.rda") 
-load( file="Rda/li1.rda")
-load( file="Rda/li1.refined.rda") 
+## if the user has saved the rda files, they can be loaded:
+## files<-system("ls Rda/*rda", intern=T); for( f in files){load(f)}
 ###############################################################################
 
 Plotting the solution in li1 (ONE CLONE):
@@ -17,7 +15,7 @@ prepCN(12)
 Given parameters S and t (with sum(t)=1) and copy number configurations cn, the 
 expected peak locations can be obtained with a call to 
 
-ePP <- ePeakPos( S= 0.6260699, t=c(0.02222, 0.97778), cn=cn  )
+ePP <- ePeakPos( S= 0.6262181, t=c(0.02269269, 0.97730731), cn=cn  )
 
 or, alternatively, using the list returned by coverParamSpace:
 
@@ -26,12 +24,12 @@ ePP <- ePeakPos( par=li1[[1]]$par  , cn=cn  )
  head(ePP)
 
   m0 p0 m1 p1          x         ar
-1  1  1  0  0 0.01391417 0.50000000
-2  1  1  0  1 0.31999205 0.02174143
-3  1  1  1  0 0.31999205 0.97825857
-4  1  1  0  2 0.62606993 0.01111231
-5  1  1  1  1 0.62606993 0.50000000
-6  1  1  2  0 0.62606993 0.98888769
+1  1  1  0  0 0.01421057 0.50000000
+2  1  1  0  1 0.32021434 0.02218916
+3  1  1  1  0 0.32021434 0.97781084
+4  1  1  0  2 0.62621810 0.01134635
+5  1  1  1  1 0.62621810 0.50000000
+6  1  1  2  0 0.62621810 0.98865366
 
 
 Here the copy number configurations in cn is broken down into (say) maternal and
@@ -44,11 +42,11 @@ To display the expected peak location onto a "showTumourProfile" graph, the user
 can call:
 
 showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
-       seed=12345  , xlim=c(0,2) , nx=200, ny=50  )
+      xlim=c(0,2) , nx=200, ny=50  )
 
 prepCN(12) # if cn does not exist 
 
-plotModelPeaks( S= 0.6260699, t=c(0.02222, 0.97778), 
+plotModelPeaks(  S= 0.6262181, t=c(0.02269269, 0.97730731),
                 selectedPoints=sp,cn=cn, epcol="red",epcex=1,eplwd=3 , 
                 addlabels=T )
 
@@ -106,7 +104,7 @@ To display the expected peak location onto a "showTumourProfile" graph, the user
 can call:
 
 showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
-       seed=12345  , xlim=c(0,2) , nx=200, ny=50  )
+        xlim=c(0,2) , nx=200, ny=50  )
 
 prepCN( 6,2,.5) 
 
@@ -146,11 +144,9 @@ The user can compare the parsimony of the above solution with the one obtained
 in li4:
 
 showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
-       seed=12345  , xlim=c(0,2) , nx=200, ny=50  )
+        xlim=c(0,2) , nx=200, ny=50  )
 
 prepCN( 6,2,.5) 
-
-load("Rda/li4.rda") 
 
 plotModelPeaks( par=li4[[1]]$par , selectedPoints=sp , 
                 cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=T, 
@@ -164,14 +160,12 @@ The ePP data.frame displays both integer copy-number counts (the m and p
 columns) and the corresponding expected values for the read count.  ePP is used
 to re-scale read counts: 
 
-load( "Rda/tc.rda")
 tcs<- scaleReadCounts( tc , ePP )
 
 A column named icopy was added.
 
 Then the data can be re-segmented or the earlier segments re-scaled directly. 
 
-load("Rda/t.ar.seg.rda")
 segments<-scaleSegments(t.ar.seg ,  ePP )
 
 A column named imean was added. 

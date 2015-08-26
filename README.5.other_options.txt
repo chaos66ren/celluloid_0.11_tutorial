@@ -1,7 +1,10 @@
-
+0        1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 
-################################################################################
+###############################################################################
+## if the user has saved the rda files, they can be loaded:
+## files<-system("ls Rda/*rda", intern=T); for( f in files){load(f)}
+###############################################################################
 
 OTHER OPTIONS: forced peak
 
@@ -48,8 +51,6 @@ The peak is forced by adding a penalty to the objective function, with control
 parameters penaltymultiplier and penaltymultipliery in coverParamSpace. These
 control parameters are passed to eoDist.
 
-
-set.seed(12345)
 li5<-coverParamSpace( sp, optimFct=2, lowerF=c(0,0), upperF=c(1,1),  
        Sfrom=.25, Sto=2 , maxc=6 , maxsubcldiff=0.5,  
        control=list( maxit=100   ) , penaltymultiplier = 10 )
@@ -67,8 +68,6 @@ seq( lowerF[i], upperF[i], len=optimFct[i+1]+1 ) (for t[i]).
 
 In other words, in the call
 
-load("Rda/sp.rda") 
-set.seed(12345)
 li6<-coverParamSpace( sp, optimFct=c(5,3), lowerF=c(0), upperF=c( 0.10 ),  
        Sfrom=.25, Sto=1 , maxc=12 , control=list( maxit=1000  ) )
 
@@ -118,21 +117,18 @@ and each solution can be plotted, here 6 per page
 
 prepCN( 6,1,NULL )
 
-  png( "contour%03d.png",  height=12, width=16, units="in", res=300 )
-     par( mfrow=c(3,2) )
-     for( i in 1:nrow(local) ){
-        cat(i,"\n")
-        r<-as.numeric(rownames(local)[i] )
-        showTumourProfile(copyAr, maxPoints=25000 , flatten=.5 , nlev=20, 
-                          seed=123345, xlim=c(0,2) , nx=200, ny=50 , 
+par( mfrow=c(3,2) )
+for( i in 1:nrow(local) ){
+ cat(i,"\n")
+ r<-as.numeric(rownames(local)[i] )
+ showTumourProfile(copyAr, maxPoints=25000 , flatten=.5 , nlev=20, 
+                          xlim=c(0,2) , nx=200, ny=50 , 
                           noise=0.01 , nopoints=T  )
-        plotModelPeaks(li6[[r]]$par, selectedPoints=NULL,
+ plotModelPeaks(li6[[r]]$par, selectedPoints=NULL,
                         cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=F )
-        legend( 0,1, floor( 1000*li6[[r]]$value)/1000, bg="white"  )
-      }     
-  dev.off()
+ legend( 0,1, floor( 1000*li6[[r]]$value)/1000, bg="white"  )
+}     
 
-See contour001.png. 
 
 
 ################################################################################
@@ -151,21 +147,15 @@ objective function more comparable when different number of peaks are used
 between runs. Note that the subset of peaks only changes between runs of 
 coverParamSpace.
 
-load( file="Rda/copyAr.rda")
-load( file="Rda/sp.rda") 
-load( file="Rda/sp.rda")
-
 cntr<-showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
-       seed=12345  , xlim=c(0,2) , nx=200, ny=50 )
+    xlim=c(0,2) , nx=200, ny=50 )
 axis(1)
 points( sp )
-
-set.seed(12345)
 
 li7<-coverParamSpace( sp , optimFct=2, lowerF=c(0), upperF=c(1),  
          Sfrom=.25, Sto=2 , maxc=6 , control=list( maxit=1000  ), 
          usesubsets=3, nrep=10  )
-save(li7, file="Rda/li7.rda") 
+## save(li7, file="Rda/li7.rda") 
 
 Each rep uses a new subset of peaks, listed in, eg, li6[[1]]$subset. 
 
@@ -188,7 +178,7 @@ plot( allParamSpace[,2], allParamSpace[,1], pch='.' )
 ##
 
 cntr<-showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
-       seed=12345  , xlim=c(0,2) , nx=200, ny=50 )
+        xlim=c(0,2) , nx=200, ny=50 )
 axis(1)
 points( sp, pch=19  )
 text( sp, labels=1:nrow(sp), cex=3 )
@@ -201,62 +191,84 @@ plotModelPeaks( par=li7[[3]]$par , selectedPoints=NULL ,
 
 OTHER OPTIONS: Sn
 
-Tumor ploidy and cellulaliry are interconnected, in such a way that S*n is constant
-(where n is the proportion of normal cells).  If the constant value of S*n can be 
-estimated, one less parameter is needed.  This value can be estimated from segments
-that are LOH. 
-
-load( file="Rda/copyAr.rda")
-load( file="Rda/t.ar.seg.rda") 
+Tumor ploidy and cellulaliry are interconnected, in such a way that S*n is 
+constant (where n is the proportion of normal cells).  If the constant value of 
+S*n can be estimated, one less parameter is needed.  This value can be estimated 
+from segments that are LOH. 
 
 cntr<-showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
-       seed=12345  , xlim=c(0,2) , nx=200, ny=50 )
+       xlim=c(0,2) , nx=200, ny=50 )
 axis(1)
 
 Let's add points to the graph that correspond to actual segments:
 
-sel<-t.ar.seg$size>100000 & !t.ar.seg$mask & t.ar.seg$meanmap>.9
-cxcut<- as.integer( cut( t.ar.seg$size[sel], c(10000,100000,1000000,5000000,10000000,20000000,50000000,Inf) ) )/3
-points( x<-t.ar.seg$mean[sel], y<-t.ar.seg$p[sel],  pch=21 , col="blue", lwd=3 , cex=cxcut  )
-points( t.ar.seg$mean[sel], t.ar.seg$p[sel],  pch=19 ,  col="white" , cex= cxcut  - .5 )
-points( t.ar.seg$mean[sel], 1-t.ar.seg$p[sel],  pch=21 ,  col="blue", lwd=3  , cex=cxcut  )
-points( t.ar.seg$mean[sel], 1-t.ar.seg$p[sel],  pch=19 , col="white" , cex=cxcut -.5 )
+sel<-t.ar.seg$size>1000000 & !t.ar.seg$mask & t.ar.seg$meanmap>.9
+# the bigger the segment, the bigger the point
+cxcut<- as.integer( cut( t.ar.seg$size[sel], 
+         c(10000,100000,1000000,5000000,10000000,20000000,50000000,Inf) ) )/3
+points( x<-t.ar.seg$mean[sel], y<-t.ar.seg$p[sel],  pch=21 , 
+          col="blue", lwd=3 , cex=cxcut  )
+points( t.ar.seg$mean[sel], t.ar.seg$p[sel],  pch=19 ,  
+          col="white" , cex= cxcut  - .5 )
+points( t.ar.seg$mean[sel], 1-t.ar.seg$p[sel],  pch=21 ,  
+          col="blue", lwd=3  , cex=cxcut  )
+points( t.ar.seg$mean[sel], 1-t.ar.seg$p[sel],  pch=19 , 
+          col="white" , cex=cxcut -.5 )
 
+Select segments (points) that are at LOH. These points will be used to estimate 
+the LOH curve and the value for S*n. Here to illustrate we do this manually; in
+pipeline.r this is done automatically, but can fail sometimes to come up with
+a good estimate. 
 
-sp <-  selectPeaks( cntr, copyAr , getLocal=F ) 
-x<-sp$x
-y<-sp$y
+lohpoints <-  selectPeaks( cntr, copyAr , getLocal=F ) 
+x<-lohpoints$x
+ar<-lohpoints$y
+
+I only chose two segments, which is enough to estimate the curve:
+ x
+[1] 0.3244808 0.6347028
+ y
+[1] 0.05 0.02
+
+This is the equation of the LOH curve as a function of S and the value x 
+representing the scaled read count of a segment:
 
 ARloh<-function( x,S, n ){
  k<-2*(x-S*n)/(S-S*n) 
  return( n/( 2*n+(1-n)*k ) )
 }
 
-nnllss<- nls( y ~ ARloh( x, 1 ,n ) , start=list(n=0.01  ) , upper=list( n=1 ), lower=list(n=0 ) , algo="port" )
+This is the fit. Since S*n is constant, we can set S to 1.
+
+nnllss<- nls( ar ~ ARloh( x, 1 ,n ) , start=list(n=0.01  ) , 
+               upper=list( n=1 ), lower=list(n=0 ) , algo="port" )
 Sn<-  summary(nnllss)$coefficients[1,1]
 
+Sn
+[1] 0.03098523
 
+The value Sn is also the scaled read count expected in regions where all copies
+were deleted in the tumor (where reads only come from the contaminating normal
+tissues).
 
-df<-c()
-for( S in seq( .5,1.25,.1 ) ){ 
- nnllss<- nls( y ~ ARloh( x,S ,n ) , start=list(n=0.01  ) , upper=list( n=1 ), lower=list(n=0 ) , algo="port" )
- n<-  summary(nnllss)$coefficients[1,1]
- df<-rbind(df, c(S,n) )
- xxx<- seq(S*n, 2, .01 ) 
- points( xxx , ARloh( xxx , S, n ) , type='l'  )
-}
+We can plot the LOH curve corresponding to Sn:
 
-df[,1]*df[,2] 
+x <- seq( Sn, 2, .01 ) 
+points( x , arloh<- ARloh( x , 1 , Sn ) , type='l' , lwd=2  )
+points( x , 1-arloh , type='l' , lwd=2  )
 
-
-sp<-t.ar.seg[sel,c("mean","p")] 
-names(sp)<-c("x","y")
-sp<-sp[ !is.na(sp[,2]),]
-
+And we can speed up the search with the Sn argument:
 
 li.sn <-coverParamSpace( sp , optimFct=2  , lowerF=c( 0  ), upperF=c( 1  ),
-                             Sfrom=.3, Sto=1 , maxc=8, maxsubcldiff=NULL   , Sn=0.004475867,
-                            control=list( maxit=1000 ) , xonly=F , preserveMatPat=F )
+                         maxc=8, Sn=0.03098523,
+                         control=list( maxit=1000 ) )
+
+In the above call, S is not varying as a paramters, but rather determined from
+the values of Sn and the estimate of fraction of normal (n=t[1]). 
+
+ li.sn[[1]]$par
+[1] 0.61334964 0.05051805
+
 
 
 
