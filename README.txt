@@ -9,13 +9,21 @@ Check your version of celluloid using
 
  library( help=celluloid )
 
-The tutorial files found at 
+The current version of celluloid is 0.11.0. Each version of celluloid has its own 
+version of the tutorial files.
 
- https://github.com/lemirema/celluloid_0.11_tutorial 
+You can download the tutorial files and the Data used therein by going to
 
-are continously being updated.  Each version of celluloid has its own version of
-the tutorial files. You can either select the version you needfrom the "Branch" drop down menu (under "Tags"), accessible from the above link, or else download 
-the tutorial version you need by going to 
+ https://github.com/mathieu-lemire/celluloid_0.11_tutorial/releases
 
- https://github.com/lemirema/celluloid_0.11_tutorial/releases
+and by selecting and downloading the latest 0.11.0.x version you will find. 
+
+The online tutorial files found at 
+
+ https://github.com/mathieu-lemire/celluloid_0.11_tutorial 
+
+are continously being updated. You can browse online, but it is best if you first 
+select a version (the latest 0.11.0.x) from the "Branch" drop down menu 
+(under "Tags"), accessible from the above link. 
+
 
