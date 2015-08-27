@@ -3,7 +3,7 @@
 
 ################################################################################
 
-Read INSTALL.txt for instruction on how to install celluloid.
+Read INSTALL.txt for instructions on how to install celluloid.
 
 Check your version of celluloid using
 
