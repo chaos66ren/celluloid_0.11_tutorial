@@ -44,18 +44,18 @@ Rscript pipeline.r Data/tumour.wig Data/normal.wig Data/gc.wig Data/map.wig Data
 
 Details of each steps of data preparation are found in 
 
- README.2.load_and_show.txt
+ tutorial.2.load_and_show.txt
 
 All data objects are saved in .rda files in a RdaPipeline directory.
 
 The analysis uses the segment-based objective function, further described in 
 
- README.3.select_and_search.txt
+ tutorial.3.select_and_search.txt
 
 The value of this objective function is an ad hoc measurement of the weighted
 fraction of the tumour genome that is captured by the model, defined by values
 of ploidy, cellularity and subclonal proportions. Another objective function,
-suited for manual interventions, in also described in the above README file. 
+suited for manual interventions, in also described in the above tutorial file. 
 
 The search is done by a call of the function coverParamSpace.
 
@@ -83,7 +83,7 @@ top left corner.
 
 Details about the figures can be found in 
 
- README.4.display_solutions.txt
+ tutorial.4.display_solutions.txt
 
 In pipeline.r, coverParamSpace makes use of a dimension reduction trick (by 
 setting a value to the argument Sn), because cellularity and ploidy are 
@@ -94,7 +94,7 @@ expected in regions of LOH, given the copy number state of the tumour in those
 regions. These LOH curves are the two symmetrical black curved lines on the 
 output graphs. See the "OTHER OPTIONS: Sn" section in 
 
- README.5.other_options.txt
+ tutorial.5.other_options.txt
 
 The user must decide on a solution based on experience, and copy-number 
 segments can then be plotted:
@@ -118,7 +118,7 @@ plotSegment( tcs,segmentsXY, ar=NULL , file="segments_pageXY",device="png",
 
 To fit two or more subclones, the user can refer to 
 
-  README.3.select_and_search
+  tutorial.3.select_and_search
 
 
 
