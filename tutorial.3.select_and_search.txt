@@ -2,19 +2,14 @@
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 
 ###############################################################################
-## if the user has saved the rda files, they can be loaded:
-## files<-system("ls Rda/*rda", intern=T); for( f in files){load(f)}
+## if the user has saved the RdaDevDev files, they can be loaded:
+## files<-system("ls RdaDev/*RdaDev", intern=T); for( f in files){load(f)}
 ###############################################################################
 
 The present file describe ways to obtain solutions for the ploidy, cellularity 
 and subclonal proportions.  Two objective functions (functions that need to be
-minimized with respect to the parameters) are described, one that is peak-based 
-and one that is segment-based.  The pipeline.r file uses the latter, which is
-more suited for automatic search. 
-
-We define a "peak" to be a local maximum in a tumour profile contour plot, 
-either an observed peak (as seen in the contour plot) or an expected peak 
-(calculated in ways described in README.1.background).
+minimized with respect to the parameters) are described, one that is segment-based 
+and one that is peak-based.  The pipeline.r file uses the former.
 
 When a fully automatic search of solutions fails to provide a satisfying 
 answer, perharps because of extended noise or subclones, celluloid offers the 
@@ -23,91 +18,41 @@ are further described when presenting the peak-based objective function.
 
 ###############################################################################
 
-1) Peak-based objective function.
+1) Segment-based objective function
 
-The objective function is described below. The advantage of using a peak-based
-analysis as opposed to the set of segments is that the contour plot smooths out
-a lot of noise. Also, the analysis is not driven by large segments: small, 
-informative ones can contribute as much than large ones if they are captured in
-a peak. 
+To find ploidy and cellularity estimates, we work with a set of segments, such
+such as those in t.ar.seg.  The two columns "mean" and "p" from t.ar.seg are
+used for the fit. 
 
-A graphic window with a tumour profile must be displayed on screen:
+We first search for a ploidy/cellularity solution by assuming a one clone model (all tumor cells are derived from a single clone). The following function does the search. To reduce the amount of noise, the user might want to first focus on large segments:
 
-cntr<-showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
-        xlim=c(0,2) , nx=200, ny=50 )
-axis(1)
+sel<-t.ar.seg$size>10000000 
+subsegments<-t.ar.seg[sel,]
 
-The following function is used to select "peaks" that will enter the analysis. 
-With getLocal=F the user is prompted to manually select peaks with left
-clicks. The selection ends with a right click. 
+ls1<-coverParamSpace( segments=subsegments, optimFct=2, lowerF=c(0), 
+      upperF=c(1),Sfrom=.25, Sto=2 , maxc=12 , control=list( maxit=1000  ) )
 
-sp <-  selectPeaks( cntr, copyAr , getLocal=F ) 
+## save(ls1, file="RdaDev/ls1.rda") 
 
-Alternatively, peaks can be automatically selected with getLocal=T. The 
-function will make nrand (default 100) calls to optim() with
-random starting points to find the local maxima. 
+The function tries to maximize an objective function (described below) over the parameter space.
 
-sp <-  selectPeaks( cntr, copyAr , getLocal=T , 
-                    percentMax=.33, manual=F, nrand=200 , filtersymm=T   ) 
+When optimFct=2, the search relies on a simulated annealing 
+algorithm (GenSA).  The function will search for a global maximum. 
 
-where percentMax raises the "sea level" so that smaller peaks and noise are
-ignored. Here it is set to be at 33% of max( cntr$z ) (which may have been 
-"flattened", depending on the call of showTumourProfle). If manual=T 
-then the user is asked to choose additional points.
-
-Note that the graph is symmetrical. Try to only select one of the two 
-symmetrical points, but if not the function will do it for you. 
-
-The function returns a data.frame containing the coordinates that we
-manually selected:
-
-sp         
-          x    y
-1 0.3301212 0.01
-2 0.6290624 0.01
-3 0.8208360 0.38
-4 0.9392844 0.33
-5 1.1197772 0.50
-6 1.2382256 0.50
-7 1.5428072 0.43
-
-See Figure1.png.
-
-## save( sp, file="Rda/sp.rda") 
-
-Inspection of sp reveals that a subset of peaks (lines 1,2,4,6,7) are separated 
-on the x-axis by multiples of approximately 0.3.  This may be an indication that 
-a single clone is sufficient to explain these peaks (i.e. segments contributing 
-tothese peaks have the same number of copies in all tumour cells), while 
-segments contributing to peaks 3 and 5 may have a different number of copies in 
-some tumour subclones. 
-
-We aim to find the set of parameters for which the observed peaks are best 
-captured by expected peaks.  The objective function to minimize is the total
-(Euclidean) distance between the observed peaks and their closest expected 
-peaks.
-
-The following function does the search,  which relies on a simulated annealing 
-algorithm (GenSA) when optimFct=2.  The lowerF and upperF arguments are the 
+The lowerF and upperF arguments are the 
 lower and upper limits for the t parameter vector, ignoring the last entry (ie, 
-lower and upper bounds for t[1:nsubclone]; t[1] is the percentage of normal 
-cells).  The Sfrom and Sto arguments are the lower and upper bounds for S (the 
+lower and upper bounds for t[1:nsubclone]; here we assumed a single clone, so the t parameter is only t[1], the percentage of normal cells).  
+
+The Sfrom and Sto arguments are the lower and upper bounds for S (the 
 scaled read counts expected in segments that have two copies in all cells; the 
-autosomal ploidy of the sequenced sample is 2/S)
-
-li1<-coverParamSpace( selectedPeaks=sp , optimFct=2, lowerF=c(0), upperF=c(1),  
-       Sfrom=.25, Sto=2 , maxc=12 , control=list( maxit=1000  ) )
-
-## save( li1, file="Rda/li1.rda")
-
-The ploidy of the sequenced sample is allowed to go from 2/Sto=1 to 2/Sfrom=8. 
+autosomal ploidy of the sequenced sample is 2/S). Thus, in the above call, the ploidy of the sequenced sample is allowed to go from 2/Sto=1 to 2/Sfrom=8. 
 The percentage of normal cells in the sequenced sample is allowed to vary from
 0% (lowerF=c(0)) to 100% (upperF=c(1)).  
 
 The control argument is passed to the optimization function used. See ?GenSA 
 for details (if optimFct=2; see ?optim if optimFct=1).
 
-The argument maxc represents the maximum number of copies that can be found in 
+The argument maxc represents the maximum number of copies of a segment that can be found in 
 any cell. Set it so that it's greater than the largest ploidy in the search.
 
 The maxc argument is passed to the function prepCN, a function called from
@@ -152,75 +97,84 @@ parameter space was well covered and if other local minima are worth refining:
 
 or in details, for chosen parameters, eg,
 
-  plot( paramSpace[,2], paramSpace[,1], pch='.', xlab="S", ylab="distance" )
+  plot( paramSpace[,2], paramSpace[,1], pch='.', xlab="S", ylab="value" )
 
-Inspection of the latter plot reveals that a local minimum near S=0.3 has not
-been well covered by the simulated annealing search.  Either use a larger 
-number of iterations, or refine the search around that S value:
-
-li1.refined<-coverParamSpace( sp , optimFct=2, lowerF=c(0), upperF=c(1),  
-       Sfrom=.2, Sto=.4 , maxc=12 , control=list( maxit=1000  ),
-        addToParamSpace=T )
-
-# save( li1.refined, file="Rda/li1.refined.rda")
-
-As a function of S, the global minimum of the objective function is clear and
-no other local minima are close to it. See Figure2.png.
+See FigureN1.png.
 
 The function returns a list of lists containing among other things the optimal 
 parameters and the value of the objective function.  It has length equal to 
-the number of starts (controled by nrep). Ie,
+the number of starts (controled by nrep, here 1 by default). Ie,
 
-li1[[1]]$value 
+ls1[[1]]$value 
 
-is the minimum distance between the observed and expected peaks and
+is the optimal value of the objective function and
 
-li1[[1]]$par
+ls1[[1]]$par
 
 contains the optimal c(S, t[1],..,t[nsubcl] ):
 
-S<-li1[[1]]$par[1]
-t<-li1[[1]]$par[ 2:length(li1[[1]]$par ) ]
+S<-ls1[[1]]$par[1]
+t<-ls1[[1]]$par[ 2:length(ls1[[1]]$par ) ]
 t<-c( t, 1-sum(t) )
 
 S
-[1] 0.6262181
+[1] 0.6331965
 t
-[1] 0.02269269 0.97730731
+[1] 0.03776784 0.96223216
 
-The list also includes paramSpace: li1[[1]]$paramSpace.
+The list also includes paramSpace: ls1[[1]]$paramSpace.
 
 The ploidy of the tumor can be calculated as:
 
 ploidy<-( 2/S - 2*t[1])/(1-t[1])
  
 ploidy
-[1] 3.221494
+[1] 3.206366
 
-Move straight to README.4.display_solutions.txt to display the solution on top 
-of the contour plot.
+Inspection of FigureN1.png reveals that a local maximum near S=0.3 might have not
+been well covered by the simulated annealing search.  The user can either use a larger 
+number of iterations, or refine the search around that S value:
 
-Alternatively, since a regular pattern can be seen in sp, the use might want to 
-perform the search by only focusing on the equally spaced peaks. This may help
-when subclones display substantial differences, but depends on the ability of
-the user to spot these regular patterns.
+ls1.refined<-coverParamSpace( segments=subsegments, optimFct=2, lowerF=c(0), upperF=c(1),  
+       Sfrom=.2, Sto=.4 , maxc=12 , control=list( maxit=1000  ),
+        addToParamSpace=T )
 
-spsubset<-sp[c(1,2,4,6,7),]
+# save( ls1.refined, file="RdaDev/ls1.refined.rda")
 
-coverParamSpace( spsubset , optimFct=2, lowerF=c(0), upperF=c(1),  
-       Sfrom=.25, Sto=2 , maxc=12 , control=list( maxit=1000  ) )
+plot( paramSpace[,2], paramSpace[,1], pch='.', xlab="S", ylab="value" )
 
+As a function of S, the global maximum of the objective function is clear and
+no other local maxima are close to it. 
 
-##############################################################################
+A visual assessment of the solution can be obtained with 
+
+showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
+      xlim=c(0,2) , nx=200, ny=50  )
+plotModelPeaks( par=ls1[[1]]$par, cn=cn, epcol="red",epcex=1,eplwd=3 )
+
+Red vertical lines represent the integer copy number values in tumors corresponding
+to the scaled read counts.  The red dots represent the values of allelic ratios
+for each copy number configuration found in cn.  More details and options can 
+be found in 
+
+ tutorial.4.display_solutions.txt
+
+#####
+
+Notice that the above solution did not capure the apparent peaks located between 2 and 3 copies, and between 3 and 4 copies.  The user can verify that the next best solution in ls1.refined[[1]]$par is unsatisfactory. 
 
 The search can be refined around the solution found above to allow for two  
-subclones, in order to capture the peaks number 3 and 5:
-
-li2<-coverParamSpace( sp, optimFct=2, lowerF=c(0.02,0), upperF=c(0.03,1),  
-       Sfrom=.62, Sto=0.63 , maxc=6 , maxsubcldiff=0.5,  
-       control=list( maxit=200 ) )
+subclones, in order to see if these extra peaks can be captured 
  
-## save( li2, file="Rda/li2.rda")
+ls2<-coverParamSpace(  segments=subsegments, optimFct=2, lowerF=c(0.0377,0), upperF=c(0.0378,.96),  
+       Sfrom=.6331, Sto=0.6332 , maxc=6 , maxsubcldiff=.5,  
+       control=list( maxit=100 ) )
+ 
+showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
+      xlim=c(0,2) , nx=200, ny=50  )
+plotModelPeaks( par=ls2[[1]]$par, cn=cn, epcol="red",epcex=1,eplwd=3 )
+
+## save( ls2, file="RdaDev/li2.rda")
 
 If >= 1, maxsubcldiff represents the upper bound for the difference in copy 
 number between any two subclones.  If < 1, it represents the upper bound for 
@@ -277,76 +231,67 @@ of any other subclone.
 
 The above call to coverParamSpace returned:
 
-li2[[1]]$par
+ls2[[1]]$par
 
-[1] 0.62536878 0.02000574 0.62700055
+[1] 0.6332000 0.0377000 0.5724236
 
-S<-li2[[1]]$par[1]
-t<-li2[[1]]$par[ 2:length(li2[[1]]$par ) ]
+S<-ls2[[1]]$par[1]
+t<-ls2[[1]]$par[ 2:length(ls2[[1]]$par ) ]
 t<-c( t, 1-sum(t) )
 
-S
-[1] 0.6253688
-t
-[1] 0.02000574 0.62700055 0.35299371
-
-plot( paramSpace[,4], paramSpace[,1], pch='.', xlab="% Subclone 1", 
-      ylab="distance", ylim=c(0,.5 ) )
+> S
+[1] 0.6332
+> t
+[1] 0.0377000 0.5724236 0.3898764
 
 Allowing two tumor populations or subclones, the percentage of normal cells is 
-2.0%, the percentage cells in the first subclone is 62.7% and the percentage of 
-cells in the second subclone is 35.3%.  See README.4.display_solutions.txt to 
-visually inspect the ovelap between the observed and expected peaks. 
+3.8%, the percentage cells in the first subclone is 57.2% and the percentage of 
+cells in the second subclone is 39.0%.  
 
-###############################################################################
+Note that the plot 
+
+plot( paramSpace[,4], paramSpace[,1], pch=19, xlab="% Subclone 1", 
+      ylab="value"  )
+
+indicates that there is also a solution as good between 0.75-0.80. The corresponding line in paramSpace can be 
+obtained using, e.g.
+
+id<-identify( paramSpace[,4], paramSpace[,1] , n=1 )
+
+(click one point on the above graph that is near the other local maximum), then
+
+paramSpace[id,]
+
+[1] 0.71313122 0.63317371 0.03770832 0.77050872 0.19178297
+
+and the alternative solution can also be plotted: 
+
+showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
+      xlim=c(0,2) , nx=200, ny=50  )
+plotModelPeaks( S=0.63317371, t=c(0.03770832, 0.77050872, 0.19178297), 
+     cn=cn, epcol="red",epcex=1,eplwd=3 )
+
+
+
+#####
 
 Instead of first finding a one-clone solution and then refining to find a 
 two-subclone solution (a stepwise approach that we recommend), the search could 
 have been done by directly calling a two-subclone model:
 
-
-li3<-coverParamSpace( sp, optimFct=2, lowerF=c(0,0), upperF=c(1,1),  
+ls3<-coverParamSpace( segments=subsegments, optimFct=2, lowerF=c(0,0), upperF=c(1,1),  
        Sfrom=.25, Sto=2 , maxc=6 , maxsubcldiff=0.5,  
        control=list( maxit=1000   ) )
 
-## save( li3, file="Rda/li3.rda")
-
-li3[[1]]$par
-
-[1] 0.62537232 0.02001801 0.62686801
-
-Inspection of paramSpace reveals that two solutions are almost equally 
-good, the other one near S=0.5.  See Figure3.png. 
-
-plot( paramSpace[,2], paramSpace[,1], pch=19, cex=.5, xlab="S", 
-           ylab="distance" , ylim=c(0,1) , xlim=c(.4,.8)  )
-abline( h=li3[[1]]$value )
-
-The search can be refined around that value if needed. 
-
-li4<-coverParamSpace( sp, optimFct=2, lowerF=c(0,0), upperF=c(1,1),  
-       Sfrom=.5, Sto=.55 , maxc=6 , maxsubcldiff=0.5,  
-       control=list( maxit=100  ) , addToParamSpace=T )
-
-li4[[1]]$par
-[1] 0.52277656 0.02381959 0.58380472
-
-## save( li4, file="Rda/li4.rda")
-
-See README.4.display_solutions.txt to get a visual assessment of the solutions.
+however, manual curation is more difficult and challenging.
 
 ###############################################################################
 
 
-2) Segment-based objective function
+In this section we illustrate how the objective function is calculated. 
 
-To find ploidy and cellularity estimates, we work with a set of segments, such
-such as those in t.ar.seg. In this first section we illustrate how the objective
-function is calculated. 
-
-Let's plot these segments onto a contour plot, and add to the graph the
-one-clone solution above. This is for illustration purposes only, those
-steps are not required in a typical analysis. 
+For illustration purposes, let's plot these segments onto a contour plot, and add to the graph the
+one-clone solution above. 
 
 par(mfrow=c(2,1))
 prepCN(12) 
@@ -357,11 +302,11 @@ sel<-t.ar.seg$size>10000000
 subsegments<-t.ar.seg[sel,]
 points(x<-subsegments$mean, y<-subsegments$p, pch=21, col="white", lwd=3, cex=2)
 points( x, 1-y,  pch=21 , col="white", lwd=3 , cex=2   )
-ePP<-plotModelPeaks( par=li1[[1]]$par ,cn=cn, epcol="red",epcex=1,eplwd=3 )
+ePP<-plotModelPeaks( par=ls1[[1]]$par ,cn=cn, epcol="red",epcex=1,eplwd=3 )
 
 We define an objective function that takes values between 0 and 1, taking the 
-value 1 if 100% of the genome in t.ar.seg is closely captured by the set of 
-expected peaks and 0 if all the of the genome is distant from the model. 
+value 1 if 100% of the genome in subsegments is closely captured by the set of 
+expected peaks (the red dots) and 0 if all the of the genome is distant from the model. 
 
 The distance between each segment and its closest expected peak is calculated.
 If that distance is 0, that segment is assigned a weight of 1. The larger the 
@@ -384,7 +329,7 @@ sel<-t.ar.seg$size>10000000
 points( x<-subsegments$mean, y<-subsegments$p,  pch=21 , col="white", lwd=2 ,
             cex=2*subsegments$we   )
 points( x, 1-y,  pch=21 , col="white", lwd=2 ,cex=2*subsegments$we  )
-plotModelPeaks( par=li1[[1]]$par ,cn=cn, epcol="red",epcex=1,eplwd=3 )
+plotModelPeaks( par=ls1[[1]]$par ,cn=cn, epcol="red",epcex=1,eplwd=3 )
 
 The objective function that would need to be maximized is defined 
 as:
@@ -393,25 +338,101 @@ sum(subsegments$size*subsegments$we)/sum(subsegments$size)
 
 and would here take the value:
 
-[1] 0.6498448
+[1] 0.6672967
 
-The weights can decrease either linearly or quadratically (more rapidly; the 
+The weights can decrease either linearly or quadratically (the 
 default) with the distance. 
 
 ###############################################################################
 
-This segment-based objective function is used when the segments argument of 
-coverParamSpace is provided. Whereas minimizing is done when using the 
-peak-based option, here maximization of the fraction of the genome captured
-is done:
 
-li5<-coverParamSpace( segments=subsegments, optimFct=2, lowerF=c(0), 
-      upperF=c(1),Sfrom=.25, Sto=2 , maxc=12 , control=list( maxit=1000  ) )
 
-li5[[1]]$par
-[1] 0.63319655 0.03776785
+plot( paramSpace[,4], paramSpace[,1], pch='.', xlab="% Subclone 1", 
+      ylab="value"  )
+id<-identify( paramSpace[,4], paramSpace[,1] )
+showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
+      xlim=c(0,2) , nx=200, ny=50  )
+plotModelPeaks( S=paramSpace[id,2], t=paramSpace[id,3:5], cn=cn, epcol="red",epcex=1,eplwd=3 )
 
-A slightly different solution than using the peak-based function. 
+
+ls2<-coverParamSpace(  segments=subsegments, optimFct=2, lowerF=c(0.0,0), upperF=c(0.05,1),  
+       Sfrom=.6331, Sto=0.6332 , maxc=6 , maxsubcldiff=0.5,  
+       control=list( maxit=100 ) )
+
+
+###############################################################################
+
+###############################################################################
+
+2) Peak-based objective function.
+
+We define a "peak" to be a local maximum in a tumour profile contour plot, 
+either an observed peak (as seen in the contour plot) or an expected peak 
+(calculated in ways described in tutorial.1.background).
+
+The objective function is described below. The advantage of using a peak-based
+analysis as opposed to the set of segments is that the contour plot smooths out
+a lot of noise. Also, the analysis is not driven by large segments: small, 
+informative ones can contribute as much than large ones if they are captured in
+a peak. 
+
+A graphic window with a tumour profile must be displayed on screen:
+
+cntr<-showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
+        xlim=c(0,2) , nx=200, ny=50 )
+axis(1)
+
+The following function is used to select "peaks" that will enter the analysis. 
+With getLocal=F the user is prompted to manually select peaks with left
+clicks. The selection ends with a right click. 
+
+sp <-  selectPeaks( cntr, copyAr , getLocal=F ) 
+
+Alternatively, peaks can be automatically selected with getLocal=T. The 
+function will make nrand (default 100) calls to optim() with
+random starting points to find the local maxima. 
+
+sp <-  selectPeaks( cntr, copyAr , getLocal=T , 
+                    percentMax=.33, manual=F, nrand=200 , filtersymm=T   ) 
+
+where percentMax raises the "sea level" so that smaller peaks and noise are
+ignored. Here it is set to be at 33% of max( cntr$z ) (which may have been 
+"flattened", depending on the call of showTumourProfle). If manual=T 
+then the user is asked to choose additional points.
+
+Note that the graph is symmetrical. Try to only select one of the two 
+symmetrical points, but if not the function will do it for you. 
+
+The function returns a data.frame containing the coordinates that we
+manually selected:
+
+sp         
+          x    y
+1 0.3301212 0.01
+2 0.6290624 0.01
+3 0.8208360 0.38
+4 0.9392844 0.33
+5 1.1197772 0.50
+6 1.2382256 0.50
+7 1.5428072 0.43
+
+See Figure1.png.
+
+## save( sp, file="RdaDev/sp.rda") 
+
+We aim to find the set of parameters for which the observed peaks are best 
+captured by expected peaks.  The objective function to minimize is the total
+(Euclidean) distance between the observed peaks and their closest expected 
+peaks.
+
+The coverParamSpace function does the search, this time by using the 
+selectedPeaks argument (instead of the segments arguments for the segment-based
+search). The only other difference is that the objective function needs to 
+to be minimized. 
+
+coverParamSpace( selectedPeaks=sp , optimFct=2, lowerF=c(0), upperF=c(1),  
+       Sfrom=.25, Sto=2 , maxc=12 , control=list( maxit=1000  ) )
+
 
 
 
