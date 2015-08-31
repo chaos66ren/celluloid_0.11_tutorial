@@ -90,8 +90,7 @@ The first line represents a configuration where normal cells (column N) have
 two copies and tumour cells (column T1) have 0 copies in a segment.  The next 
 line represents a configuration where normal cells have two copies and tumour 
 cells 1 copy, etc. In the search, a segment is only allowed to have one of 
-these configurations. It is from these configurations that expected peak 
-locations are derived. 
+these configurations. 
 
 The coverParamSpace function creates a global matrix called paramSpace that 
 contains the value of the objective function (first column) and the value of 
@@ -129,14 +128,15 @@ S
 t
 [1] 0.03776784 0.96223216
 
-The list also includes paramSpace: ls1[[1]]$paramSpace.
-
+The sequenced sample thus contain 3.8% normal cells and 96.2% tumor cells. 
 The ploidy of the tumor can be calculated as:
 
 ploidy<-( 2/S - 2*t[1])/(1-t[1])
  
 ploidy
 [1] 3.206366
+
+The list also includes paramSpace: ls1[[1]]$paramSpace.
 
 Inspection of FigureN1.png reveals that a local maximum near S=0.3 might not 
 have been well covered by the simulated annealing search.  The user can either 
@@ -188,7 +188,9 @@ plotModelPeaks( par=ls2[[1]]$par, cn=cn, epcol="red",epcex=1,eplwd=3 )
 If >= 1, maxsubcldiff represents the upper bound for the difference in copy 
 number between any two subclones.  If < 1, it represents the upper bound for 
 the ratio between the minimum and maximum copy number seen across all 
-subclones.  Maxc and maxsubcldiff are used in prepCN, a function called from
+subclones (note that when maxsubcldiff<1, a copy number 0 is treated as being 1 
+in the calculation of this ratio).
+Maxc and maxsubcldiff are used in prepCN, a function called from
 within coverParamSpace that creates a global data.frame with the name "cn" that 
 describes the allowed copy number configurations between all subclones. The
 value maxc=6 was chosen based on the one clone solution. 
@@ -231,12 +233,10 @@ cn
 The first line represents a configuration where normal cells have two copies 
 and both subclones have 0 copies in a segment.  The next line represents a 
 configuration where normal cells have two copies, the first subclone has 1 copy
-and the second subclone has 0 copies, etc. 
-
-Note that when maxsubcldiff<1, a copy number 0 is treated as being 1. The above
+and the second subclone has 0 copies, etc.  The above
 cn data.frame (created with maxsubcldiff=0.5) describes situations where the 
 copy number in a subclone is only allowed to be at most double the copy number 
-of any other subclone.
+of any other subclone.  
 
 The above call to coverParamSpace returned:
 
@@ -262,8 +262,10 @@ Note that the plot
 plot( paramSpace[,4], paramSpace[,1], pch=19, xlab="% Subclone 1", 
       ylab="value"  )
 
-indicates that there is also a solution as good between 0.75-0.80. The 
-corresponding line in paramSpace can be obtained using, e.g.
+indicates that there is also a solution that appears as good as 
+the one above for a percentage of subclone 1 near 0.77. A quick way
+of extracting that solution from the graph without refitting 
+consists of calling identify: 
 
 id<-identify( paramSpace[,4], paramSpace[,1] , n=1 )
 
@@ -273,7 +275,7 @@ paramSpace[id,]
 
 [1] 0.71313122 0.63317371 0.03770832 0.77050872 0.19178297
 
-and the alternative solution can also be plotted: 
+The alternative solution can then be plotted: 
 
 showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
       xlim=c(0,2) , nx=200, ny=50  )
