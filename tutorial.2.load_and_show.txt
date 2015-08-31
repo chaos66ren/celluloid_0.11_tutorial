@@ -9,6 +9,13 @@ and mappability-corrected. A "peak" is a local maximum in a contour plot
 
 ###############################################################################
 
+In the following, we set seed values (set.seed()) so that results presented here 
+can be reproduced by the user.  Otherwise seeds do not need to be set. We set
+them before each function that uses randomness (random sampling, random starting
+points,...). 
+
+###############################################################################
+
 Define the files
 
 tumourWigFile<-"Data/tumour.wig"
@@ -25,23 +32,24 @@ Perform GC-content correction. This only uses autosomal chromosomes. A randomly
 chosen set of bins (50000 by default) is used to estimate the effect of gc
 content.
 
+## set.seed(12345)
 nc<-gcCorrect(n) 
 
 Segment the data, using functions from the copynumber package. At the same time, 
 the function also calculates the mean mappability in each segment.
 
-n.seg <- segmentSeqData( nc, k=50 , maskmap = 0.8 )
-
+n.seg <- segmentSeqData( nc, kmin=50 , maskmap = 0.8 )
 
 head(n.seg)
 
   sampleID chrom arm start.pos   end.pos n.probes   mean   meanmap
-1       rc  chr1   p    752001  16861000     9328 1.0206 0.9833648
-2       rc  chr1   p  16861001  17019000       50 3.1215 0.9589670
-3       rc  chr1   p  17019001  17113000       50 2.0016 0.9869834
-4       rc  chr1   p  17114001  72747000    36226 1.0375 0.9846102
-5       rc  chr1   p  72747001  72815000       50 0.3510 0.9826200
-6       rc  chr1   p  72815001 120532000    35261 1.0392 0.9867323
+1       rc  chr1   p    752001  16861000     9328 1.0216 0.9833648
+2       rc  chr1   p  16861001  17019000       50 3.1249 0.9589670
+3       rc  chr1   p  17019001  17113000       50 2.0029 0.9869834
+4       rc  chr1   p  17114001  72747000    36227 1.0391 0.9846102
+5       rc  chr1   p  72747001  72815000       50 0.3515 0.9826200
+6       rc  chr1   p  72815001 120532000    35261 1.0413 0.9867323
+
 
 In the above segmentSeqData call, bins with mappability less than 0.8 are 
 treated as missing data, which explains why the genomic intervals in the output
@@ -58,24 +66,24 @@ Repeat for tumor data:
 
 t <- wigsToRangedData( tumourWigFile, gcWigFile, mapWigFile )
 
+## set.seed(23451) 
 tc<-gcCorrect( t , sampletype="tumor" )
 
-t.seg <- segmentSeqData( tc , k=50 , maskmap = 0.8 )
+t.seg <- segmentSeqData( tc , kmin=50 , maskmap = 0.8 )
 
 head(t.seg)
 
   sampleID chrom arm start.pos   end.pos n.probes   mean   meanmap
-1       rc  chr1   p    752001  16851000     9321 0.9138 0.9833743
-2       rc  chr1   p  16858001  17015000       50 2.7971 0.9566322
-3       rc  chr1   p  17017001  17113000       52 1.7993 0.9873735
-4       rc  chr1   p  17114001  72747000    36219 0.9365 0.9846102
-5       rc  chr1   p  72747001  72815000       50 0.3138 0.9826200
-6       rc  chr1   p  72815001 120532000    35256 0.9434 0.9867323
+1       rc  chr1   p    752001  16851000     9326 0.9121 0.9833743
+2       rc  chr1   p  16858001  17015000       50 2.7908 0.9566322
+3       rc  chr1   p  17017001  17113000       52 1.7895 0.9873735
+4       rc  chr1   p  17114001  72747000    36225 0.9375 0.9846102
+5       rc  chr1   p  72747001  72815000       50 0.3149 0.9826200
+6       rc  chr1   p  72815001 120532000    35256 0.9455 0.9867323
 
 
-##    save( t.seg, file="Rda/t.seg.rda")
-
-##    save( tc, file="Rda/tc.rda")
+## save( t.seg, file="Rda/t.seg.rda")
+## save( tc, file="Rda/tc.rda")
 
 
 ###################
@@ -89,12 +97,12 @@ t.n.seg<-intersectSegments( t.seg, n.seg )
 head(t.n.seg)
 
    sampleID chrom arm start.pos  end.pos     size   mean   meanmap mean.1 meanmap.1
-1        NA  chr1   p    752001 16851000 16099000 0.9138 0.9833743 1.0206 0.9833648
-2        NA  chr1   p  16851001 16858000     7000     NA        NA 1.0206 0.9833648
-21       NA  chr1   p  16858001 16861000     3000 2.7971 0.9566322 1.0206 0.9833648
-22       NA  chr1   p  16861001 17015000   154000 2.7971 0.9566322 3.1215 0.9589670
-23       NA  chr1   p  17015001 17017000     2000     NA        NA 3.1215 0.9589670
-3        NA  chr1   p  17017001 17019000     2000 1.7993 0.9873735 3.1215 0.9589670
+1        NA  chr1   p    752001 16851000 16099000 0.9121 0.9833743 1.0216 0.9833648
+2        NA  chr1   p  16851001 16858000     7000     NA        NA 1.0216 0.9833648
+21       NA  chr1   p  16858001 16861000     3000 2.7908 0.9566322 1.0216 0.9833648
+22       NA  chr1   p  16861001 17015000   154000 2.7908 0.9566322 3.1249 0.9589670
+23       NA  chr1   p  17015001 17017000     2000     NA        NA 3.1249 0.9589670
+3        NA  chr1   p  17017001 17019000     2000 1.7895 0.9873735 3.1249 0.9589670
 
 Columns mean and meanmap are from t.seg (the first argument), mean.1 and 
 meanmap.1 are from n.seg (the second argument).  Note that NAs are introduced 
@@ -185,12 +193,12 @@ t.ar.seg <- intersectSegments( t.seg.mask, ar.seg  )
 
 head(t.ar.seg)
 
-   sampleID chrom arm start.pos  end.pos     size   mean   meanmap  mask meanar
-1        NA  chr1   p    752001   754729     2729 0.9138 0.9833743 FALSE     NA
-11       NA  chr1   p    754730 16851000 16096271 0.9138 0.9833743 FALSE 0.3293
+  sampleID chrom arm start.pos  end.pos     size   mean   meanmap  mask meanar
+1        NA  chr1   p    752001   754729     2729 0.9121 0.9833743 FALSE     NA
+11       NA  chr1   p    754730 16851000 16096271 0.9121 0.9833743 FALSE 0.3293
 3        NA  chr1   p  16851001 16858000     7000     NA        NA    NA 0.3293
-21       NA  chr1   p  16858001 16861000     3000 2.7971 0.9566322 FALSE 0.3293
-22       NA  chr1   p  16861001 17015000   154000 2.7971 0.9566322  TRUE 0.3293
+21       NA  chr1   p  16858001 16861000     3000 2.7908 0.9566322 FALSE 0.3293
+22       NA  chr1   p  16861001 17015000   154000 2.7908 0.9566322  TRUE 0.3293
 6        NA  chr1   p  17015001 17017000     2000     NA        NA    NA 0.3293
 
 
@@ -203,9 +211,9 @@ Removing the NAs that were introduced:
 t.ar.seg<-t.ar.seg[ !apply( is.na( t.ar.seg[,c("mean","meanar")] ), 1, any),]
 
 As noted above, allelic ratios in meanar are always < 0.5. The following 
-function addresses this by formally estimating the ratio of maternal/paternal
-chromosomes, by modeling the number of reads using Poisson distributions. The
-estimates are added in a column named p.
+function addresses this by formally estimating the proportion of maternal and 
+paternal chromosomes, by modeling the number of reads using Poisson 
+distributions. The estimates are added in a column named p.
 
 t.ar.seg <-arInSeg( t.ar.seg, ar,  tumourrangedata=tc , minhet = 50 )
 
@@ -214,16 +222,20 @@ Estimates are provided if a minimum of 50 SNPs is found in the segment.
 t.ar.seg[17:26,]
 
     sampleID chrom arm start.pos   end.pos      size   mean   meanmap  mask meanar         p
-20        NA  chr2   p  89620001  89627000      7000 2.3289 0.9657530 FALSE 0.4268        NA
-201       NA  chr2   p  89627001  89894000    267000 2.3289 0.9657530 FALSE 0.4268 0.4999471
-212       NA  chr2   p  89894001  89901000      7000 1.2647 0.9753866 FALSE 0.4268        NA
-214       NA  chr2   p  89902001  90270556    368556 1.2647 0.9753866 FALSE 0.4268 0.4999359
-241       NA  chr2   q  97919691 133011000  35091310 1.2466 0.9858141 FALSE 0.4265 0.4764890
-251       NA  chr2   q 133011001 133109000     98000 2.2544 0.9730405 FALSE 0.4265 0.4508478
-252       NA  chr2   q 133114001 133115000      1000 2.2544 0.9730405 FALSE 0.4265        NA
-261       NA  chr2   q 133124001 243043000 109919000 1.2464 0.9865184 FALSE 0.4265 0.4881482
-27        NA  chr3   p     62001  90498746  90436746 0.9380 0.9865889 FALSE 0.3313 0.3355106
-281       NA  chr3   q  93519001 197843000 104324000 0.9382 0.9863952 FALSE 0.3312 0.3348311
+20        NA  chr2   p  89620001  89627000      7000 2.3301 0.9657530 FALSE 0.4268        NA
+201       NA  chr2   p  89627001  89894000    267000 2.3301 0.9657530  TRUE 0.4268 0.4999471
+212       NA  chr2   p  89894001  89901000      7000 1.2655 0.9753866  TRUE 0.4268        NA
+214       NA  chr2   p  89902001  90270556    368556 1.2655 0.9753866 FALSE 0.4268 0.4999359
+241       NA  chr2   q  97919691 133011000  35091310 1.2484 0.9858141 FALSE 0.4265 0.4999213
+251       NA  chr2   q 133011001 133109000     98000 2.2562 0.9730405  TRUE 0.4265 0.4508478
+252       NA  chr2   q 133114001 133115000      1000 2.2562 0.9730405 FALSE 0.4265        NA
+261       NA  chr2   q 133124001 243043000 109919000 1.2488 0.9865184 FALSE 0.4265 0.4801602
+27        NA  chr3   p     62001  90498746  90436746 0.9396 0.9865889 FALSE 0.3313 0.3374214
+281       NA  chr3   q  93519001 197843000 104324000 0.9402 0.9863952 FALSE 0.3312 0.3352242
+
+The user can see that the proportion of maternal/paternal chromosomes in 
+segments that had estimated allelic ratios close to 0.43 was adjusted up
+to close to 0.50.  
 
 The user might want to discard smaller segments that were introduced during 
 intersecting steps.
@@ -244,18 +256,18 @@ copyAr<-  prepCopyAr( t.ar.seg[ !mask ,], ar,  tc  )
 
 ##   save(copyAr, file="Rda/copyAr.rda")
 
-The following function plots the autosomal-wide copy number profile of the tumour. Each 
-peak (or pair of peaks since the graph is reflected around AR=0.5) corresponds 
-to a specific copy-number state that summarizes both the total copy number in 
-the tumour cells (on the x-axis, once appropriately scaled) and the ratio of 
-relative abundance of maternal and paternal copies (on the y-axis, once 
-contamination from normal tissues – or tumor cellularity – is accounted for).
+The following function plots the autosomal-wide copy number profile of the t
+tumour. Each peak (or pair of peaks since the graph is reflected around AR=0.5) 
+corresponds to a specific copy-number state that summarizes both the total copy 
+number in the tumour cells (on the x-axis, once appropriately scaled) and the 
+fraction of maternal and paternal copies (on the y-axis, once contamination from 
+normal tissues – or tumor cellularity – is accounted for).
 
 Underneath this contour plot are the points in copyAr, one point per 
 heterozygous position.
 
 cntr<-showTumourProfile( copyAr , flatten=.5 , nlev=20 , noise= 0.01 , 
-                        maxPoints=200000 )
+                        maxPoints=200000 ,seed=12345 )
 
 
 The flatten option is used to make smaller peaks stand out; the heights are 
