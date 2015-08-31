@@ -269,6 +269,7 @@ heterozygous position.
 cntr<-showTumourProfile( copyAr , flatten=.5 , nlev=20 , noise= 0.01 , 
                         maxPoints=200000 ,seed=12345 )
 
+See FigureN1.png.
 
 The flatten option is used to make smaller peaks stand out; the heights are 
 elevated to the power flatten (^.5 in this example). It is solely used for

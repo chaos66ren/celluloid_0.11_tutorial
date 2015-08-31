@@ -6,7 +6,194 @@
 ## files<-system("ls Rda/*rda", intern=T); for( f in files){load(f)}
 ###############################################################################
 
+OTHER OPTIONS: grid search 
+
+If the value of optimFct is a vector, then grid search is performed with 
+optim(), using a number of starting values equal to prod(optimFct). Starting 
+values for parameters S and t[1],...,t[nsubclones] are the mid-points of the 
+intervals defined by seq(Sfrom, Sto, len=optimFct[1]+1) (for S), and 
+seq( lowerF[i], upperF[i], len=optimFct[i+1]+1 ) (for t[i]).  
+
+In other words, in the call
+
+sol5<-coverParamSpace( segments=subsegments, optimFct=c(5,3), 
+       lowerF=c(0), upperF=c( 0.10 ),  
+       Sfrom=.25, Sto=1 , maxc=12 , control=list( maxit=1000  ) )
+
+the starting values from S (5 starting values) are the mid points of the 
+intervals defined by 
+
+[1] 0.25 0.40 0.55 0.70 0.85 1.00
+
+which are:
+
+[1] 0.325 0.475 0.625 0.775 0.925
+
+while starting values for t[1] (% of normal cells; 3 starting points) are 
+
+[1] 0.01666667 0.05000000 0.08333333
+
+Each possible pair is used as starting point with the optim() function. The list
+returned by coverParamSpace will be of length 5x3=15.
+
+sol5[[1]]$par
+[1] 0.32594798 0.05798794
+
+...
+
+sol5[[15]]$par
+[1] 1 0
+
+Since different starting points can converge to the same solution, solutions 
+can be trimmed using 
+
+local<- getLocalSolutions(sol5)
+
+local
+        value         S          N        T1
+13 0.65551909 0.6346122 0.03917475 0.9608252
+1  0.59304212 0.3259480 0.05798794 0.9420121
+7  0.27555647 0.2517551 0.01337195 0.9866281
+5  0.08921274 1.0000000 0.00000000 1.0000000
+2  0.08146039 0.3767127 0.00000000 1.0000000
+4  0.04663776 0.8868407 0.00000000 1.0000000
+
+and each solution can be plotted, here 6 per page
+
+
+par( mfrow=c(3,2) )
+prepCN( 12,1,NULL )
+for( i in 1:nrow(local) ){
+ cat(i,"\n")
+ r<-as.numeric(rownames(local)[i] )
+ showTumourProfile(copyAr, maxPoints=25000 , flatten=.5 , nlev=20, 
+                          xlim=c(0,2) , nx=200, ny=50 , 
+                          noise=0.01 , nopoints=T  )
+ plotModelPeaks(sol5[[r]]$par, selectedPoints=NULL,
+                        cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=F )
+ legend( 0,1, floor( 1000*sol5[[r]]$value)/1000, bg="white"  )
+}     
+
+
+################################################################################
+
+OTHER OPTIONS: Sn
+
+Tumor ploidy and cellulaliry are interconnected, in such a way that S*n is 
+constant (where n is the proportion of normal cells).  If the constant value of 
+S*n can be estimated, then one less parameter is needed.  This value can be 
+estimated from segments that are LOH. 
+
+cntr<-showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
+       xlim=c(0,2) , nx=200, ny=50 )
+axis(1)
+
+Let's add points to the graph that correspond to actual segments:
+
+sel<-t.ar.seg$size>1000000 & !t.ar.seg$mask & t.ar.seg$meanmap>.9
+# the bigger the segment, the bigger the point
+cxcut<- as.integer( cut( t.ar.seg$size[sel], 
+         c(10000,100000,1000000,5000000,10000000,20000000,50000000,Inf) ) )/3
+points( x<-t.ar.seg$mean[sel], y<-t.ar.seg$p[sel],  pch=21 , 
+          col="blue", lwd=3 , cex=cxcut  )
+points( t.ar.seg$mean[sel], t.ar.seg$p[sel],  pch=19 ,  
+          col="white" , cex= cxcut  - .5 )
+points( t.ar.seg$mean[sel], 1-t.ar.seg$p[sel],  pch=21 ,  
+          col="blue", lwd=3  , cex=cxcut  )
+points( t.ar.seg$mean[sel], 1-t.ar.seg$p[sel],  pch=19 , 
+          col="white" , cex=cxcut -.5 )
+
+See FigureN5.png.
+
+LOH curves represent the values of the allelic ratios that are expected
+in regions that are LOH in the tumor cells, for each possible value x of 
+the scaled read counts. This curve is a a function of x, S and n (the 
+fraction of normal cells) and takes the value:
+
+ARloh<-function( x,S, n ){
+ k<-2*(x-S*n)/(S-S*n) 
+ return( n/( 2*n+(1-n)*k ) )
+}
+
+An estimate of the value of S*n can be obtained with a call of 
+
+Sn<- estimateLOHcurve(t.ar.seg)
+
+Sn
+[1] 0.0474222
+
+(see below to plot the LOH curve). This function should work most
+of the time but can fail sometimes depending on the noise; we illustrate 
+how to recover the value S*n manually.
+
+In the contour plot above, the user should select segments (points) on the 
+bottom portion of the graph that the user believes correponds to regions that 
+are LOH. These points will be used to estimate the LOH curve and the value for 
+S*n:
+
+lohpoints <-  selectPeaks( cntr, copyAr , getLocal=F ) 
+x<-lohpoints$x
+y<-lohpoints$y
+
+Here we only chose two segments:
+
+x
+[1] 0.3276172 0.6339268
+y
+[1] 0.06 0.02
+
+These are the two black dots in FigureN5.png.  
+
+The fit is done using nonlinear least squares. Since S*n is constant, we can set
+S to 1.
+
+nnllss<- nls( y ~ ARloh( x, 1 ,n ) , start=list(n=0.01  ) , 
+               upper=list( n=1 ), lower=list(n=0 ) , algo="port" )
+Sn<-  summary(nnllss)$coefficients[1,1]
+
+Sn
+[1] 0.03637208
+
+The value Sn also represents the scaled read count expected in regions where all copies were deleted in the tumor (where reads only come from the normal 
+tissues).
+
+We can plot the LOH curve corresponding to Sn:
+
+x <- seq( Sn, 2, .01 ) 
+points( x , arloh<- ARloh( x , 1 , Sn ) , type='l' , lwd=2  )
+points( x , 1-arloh , type='l' , lwd=2  )
+
+Those are the two black curves in FigureN5.png. All segments should be between
+those two lines. 
+
+We can then speed up the search with the Sn argument:
+
+sol.sn <-coverParamSpace( segments=subsegments, optimFct=2  , 
+                         lowerF=c( 0  ), upperF=c( 1  ),
+                         maxc=8, Sn=0.03637208,
+                         control=list( maxit=1000 ) )
+
+In the above call, S is not varying as a parameters (Sfrom and Sto are thus not
+specified) but rather determined from the values of Sn and the estimate of 
+fraction of normal cells (n=t[1]). 
+
+sol.sn[[1]]$par
+
+[1] 0.63908412 0.05691282
+
+a slighly different solution compared to sol1, caused by the extra estimation 
+step (and the potential over-estimation of $p compared to $meanar for ar near
+the edges).
+
+plotModelPeaks( par=sol.sn[[1]]$par, cn=cn, epcol="red",epcex=1,eplwd=3 )
+
+
+###############################################################################
+
+
 OTHER OPTIONS: forced peak
+
+Only works with the peak-based objective function. 
 
 To force a peak to represent a particular combination of copy numbers, add a
 third column to the sp data.frame that will represent the copy number 
@@ -51,225 +238,9 @@ The peak is forced by adding a penalty to the objective function, with control
 parameters penaltymultiplier and penaltymultipliery in coverParamSpace. These
 control parameters are passed to eoDist.
 
-li5<-coverParamSpace( sp, optimFct=2, lowerF=c(0,0), upperF=c(1,1),  
+ls <-coverParamSpace( sp, optimFct=2, lowerF=c(0,0), upperF=c(1,1),  
        Sfrom=.25, Sto=2 , maxc=6 , maxsubcldiff=0.5,  
        control=list( maxit=100   ) , penaltymultiplier = 10 )
-
-
-###############################################################################
-
-OTHER OPTIONS: grid search 
-
-If optimFct is a vector, then grid search is performed with optim() using a 
-number of starting values equal to prod(optimFct). Starting values for 
-parameters S and t[1],...,t[nsubclones] are the mid-points of the intervals
-defined by seq(Sfrom, Sto, len=optimFct[1]+1) (for S), and 
-seq( lowerF[i], upperF[i], len=optimFct[i+1]+1 ) (for t[i]).  
-
-In other words, in the call
-
-li6<-coverParamSpace( sp, optimFct=c(5,3), lowerF=c(0), upperF=c( 0.10 ),  
-       Sfrom=.25, Sto=1 , maxc=12 , control=list( maxit=1000  ) )
-
-## save( li6, file="Rda/li6.rda") 
-
-the starting values from S are the mid points of the intervals defined by 
-
-[1] 0.25 0.40 0.55 0.70 0.85 1.00
-
-which are:
-
-[1] 0.325 0.475 0.625 0.775 0.925
-
-while starting values for t[1] (% of normal cells) are 
-
-[1] 0.01666667 0.05000000 0.08333333
-
-Each possible pair is used as starting point with the optim() function. The list
-returned by coverParamSpace will be of length 5x3=15.
-
-li6[[1]]$par
-[1] 0.3170566 0.0000000
-
-...
-
- li6[[15]]$par
-[1] 1.00000000 0.02508548
-
-Since different starting points can converge to the same solution, solutions 
-can be trimmed using 
-
-local<- getLocalMins(li6 )
-
-local
-
-         value         S           N        T1
-2  0.2832984 0.6007250 0.009131892 0.9908681
-1  0.5011141 0.3029616 0.005516430 0.9944836
-11 0.5519167 0.3196328 0.083492540 0.9165075
-7  0.8753860 0.2500000 0.009887068 0.9901129
-4  1.1715130 0.7698892 0.000000000 1.0000000
-5  1.2450259 1.0000000 0.025085485 0.9749145
-
-
-and each solution can be plotted, here 6 per page
-
-
-prepCN( 6,1,NULL )
-
-par( mfrow=c(3,2) )
-for( i in 1:nrow(local) ){
- cat(i,"\n")
- r<-as.numeric(rownames(local)[i] )
- showTumourProfile(copyAr, maxPoints=25000 , flatten=.5 , nlev=20, 
-                          xlim=c(0,2) , nx=200, ny=50 , 
-                          noise=0.01 , nopoints=T  )
- plotModelPeaks(li6[[r]]$par, selectedPoints=NULL,
-                        cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=F )
- legend( 0,1, floor( 1000*li6[[r]]$value)/1000, bg="white"  )
-}     
-
-
-
-################################################################################
-
-OTHER OPTIONS: subsets 
-
-In the situation where the tumour has more subclones than specified in the 
-coverParamSpace function, it is possible that the sp data.frame contains peaks 
-that are specific to the unspecified subclone(s).  The coverParamSpace function
-has an option (usesubsets) that indicates that only a subset of the peaks 
-(randomly chosen) are to be used in the fit. The size of the subset will be at 
-least equal to the integer value assigned to the usesubsets argument (NULL by 
-default). The value of the objective function is then divided by the percentage
-of the rows of sp that actually entered the fit, to make the value of the 
-objective function more comparable when different number of peaks are used 
-between runs. Note that the subset of peaks only changes between runs of 
-coverParamSpace.
-
-cntr<-showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
-    xlim=c(0,2) , nx=200, ny=50 )
-axis(1)
-points( sp )
-
-li7<-coverParamSpace( sp , optimFct=2, lowerF=c(0), upperF=c(1),  
-         Sfrom=.25, Sto=2 , maxc=6 , control=list( maxit=1000  ), 
-         usesubsets=3, nrep=10  )
-## save(li7, file="Rda/li7.rda") 
-
-Each rep uses a new subset of peaks, listed in, eg, li6[[1]]$subset. 
-
-
-##
-
-par(mfrow=c( 2,5 ))
-allParamSpace<-c()
-for( i in 1:length(li7) ){
- allParamSpace<-rbind( allParamSpace, li7[[i]]$paramSpace )
- plot( li7[[i]]$paramSpace[,2], li7[[i]]$paramSpace[,1], pch='.' , 
-          main=li7[[i]]$subset , ylim=c(0,2) )
-}
-
-##
-
-par(mfrow=c(1,1))
-plot( allParamSpace[,2], allParamSpace[,1], pch='.' )
-
-##
-
-cntr<-showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
-        xlim=c(0,2) , nx=200, ny=50 )
-axis(1)
-points( sp, pch=19  )
-text( sp, labels=1:nrow(sp), cex=3 )
-plotModelPeaks( par=li7[[3]]$par , selectedPoints=NULL , 
-                cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=T, 
-                preserveMatPatDiff=T , preserveMaxSubClDiff=T )
-
-
-################################################################################
-
-OTHER OPTIONS: Sn
-
-Tumor ploidy and cellulaliry are interconnected, in such a way that S*n is 
-constant (where n is the proportion of normal cells).  If the constant value of 
-S*n can be estimated, one less parameter is needed.  This value can be estimated 
-from segments that are LOH. 
-
-cntr<-showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
-       xlim=c(0,2) , nx=200, ny=50 )
-axis(1)
-
-Let's add points to the graph that correspond to actual segments:
-
-sel<-t.ar.seg$size>1000000 & !t.ar.seg$mask & t.ar.seg$meanmap>.9
-# the bigger the segment, the bigger the point
-cxcut<- as.integer( cut( t.ar.seg$size[sel], 
-         c(10000,100000,1000000,5000000,10000000,20000000,50000000,Inf) ) )/3
-points( x<-t.ar.seg$mean[sel], y<-t.ar.seg$p[sel],  pch=21 , 
-          col="blue", lwd=3 , cex=cxcut  )
-points( t.ar.seg$mean[sel], t.ar.seg$p[sel],  pch=19 ,  
-          col="white" , cex= cxcut  - .5 )
-points( t.ar.seg$mean[sel], 1-t.ar.seg$p[sel],  pch=21 ,  
-          col="blue", lwd=3  , cex=cxcut  )
-points( t.ar.seg$mean[sel], 1-t.ar.seg$p[sel],  pch=19 , 
-          col="white" , cex=cxcut -.5 )
-
-Select segments (points) that are at LOH. These points will be used to estimate 
-the LOH curve and the value for S*n. Here to illustrate we do this manually; in
-pipeline.r this is done automatically, but can fail sometimes to come up with
-a good estimate. 
-
-lohpoints <-  selectPeaks( cntr, copyAr , getLocal=F ) 
-x<-lohpoints$x
-ar<-lohpoints$y
-
-I only chose two segments, which is enough to estimate the curve:
- x
-[1] 0.3244808 0.6347028
- y
-[1] 0.05 0.02
-
-This is the equation of the LOH curve as a function of S and the value x 
-representing the scaled read count of a segment:
-
-ARloh<-function( x,S, n ){
- k<-2*(x-S*n)/(S-S*n) 
- return( n/( 2*n+(1-n)*k ) )
-}
-
-This is the fit. Since S*n is constant, we can set S to 1.
-
-nnllss<- nls( ar ~ ARloh( x, 1 ,n ) , start=list(n=0.01  ) , 
-               upper=list( n=1 ), lower=list(n=0 ) , algo="port" )
-Sn<-  summary(nnllss)$coefficients[1,1]
-
-Sn
-[1] 0.03098523
-
-The value Sn is also the scaled read count expected in regions where all copies
-were deleted in the tumor (where reads only come from the contaminating normal
-tissues).
-
-We can plot the LOH curve corresponding to Sn:
-
-x <- seq( Sn, 2, .01 ) 
-points( x , arloh<- ARloh( x , 1 , Sn ) , type='l' , lwd=2  )
-points( x , 1-arloh , type='l' , lwd=2  )
-
-And we can speed up the search with the Sn argument:
-
-li.sn <-coverParamSpace( sp , optimFct=2  , lowerF=c( 0  ), upperF=c( 1  ),
-                         maxc=8, Sn=0.03098523,
-                         control=list( maxit=1000 ) )
-
-In the above call, S is not varying as a paramters, but rather determined from
-the values of Sn and the estimate of fraction of normal (n=t[1]). 
-
- li.sn[[1]]$par
-[1] 0.61334964 0.05051805
-
-
 
 
 

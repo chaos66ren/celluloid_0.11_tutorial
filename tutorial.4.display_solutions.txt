@@ -6,7 +6,7 @@
 ## files<-system("ls Rda/*rda", intern=T); for( f in files){load(f)}
 ###############################################################################
 
-Plotting the solution in li1 (ONE CLONE):
+Plotting the solution in sol1 (ONE CLONE):
 
 If cn does not already exist, set it using the parameters used in the search:
 
@@ -15,21 +15,21 @@ prepCN(12)
 Given parameters S and t (with sum(t)=1) and copy number configurations cn, the 
 expected peak locations can be obtained with a call to 
 
-ePP <- ePeakPos( S= 0.6262181, t=c(0.02269269, 0.97730731), cn=cn  )
+ePP <- ePeakPos( S=0.6347076 , t=c(0.03951727, 0.96048273), cn=cn  )
 
 or, alternatively, using the list returned by coverParamSpace:
 
-ePP <- ePeakPos( par=li1[[1]]$par  , cn=cn  )
+ePP <- ePeakPos( par=sol1[[1]]$par  , cn=cn  )
 
  head(ePP)
 
   m0 p0 m1 p1          x         ar
-1  1  1  0  0 0.01421057 0.50000000
-2  1  1  0  1 0.32021434 0.02218916
-3  1  1  1  0 0.32021434 0.97781084
-4  1  1  0  2 0.62621810 0.01134635
-5  1  1  1  1 0.62621810 0.50000000
-6  1  1  2  0 0.62621810 0.98865366
+1  1  1  0  0 0.02508191 0.50000000
+2  1  1  0  1 0.32989476 0.03801502
+3  1  1  1  0 0.32989476 0.96198498
+4  1  1  0  2 0.63470760 0.01975864
+5  1  1  1  1 0.63470760 0.50000000
+6  1  1  2  0 0.63470760 0.98024136
 
 
 Here the copy number configurations in cn is broken down into (say) maternal and
@@ -38,122 +38,130 @@ distinguish the two chromosomes; the actual parental origin can not
 be derived). m0 and p0 are used for normal cells, m1 and p1 are used for the 
 tumour cells. 
 
-To display the expected peak location onto a "showTumourProfile" graph, the user
-can call:
+To display the expected peak locations (the (x,ar) points from ePP) onto a 
+contour graph, the user should call:
 
 showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
       xlim=c(0,2) , nx=200, ny=50  )
 
 prepCN(12) # if cn does not exist 
 
-plotModelPeaks(  S= 0.6262181, t=c(0.02269269, 0.97730731),
-                selectedPoints=sp,cn=cn, epcol="red",epcex=1,eplwd=3 , 
-                addlabels=T )
+plotModelPeaks( S=0.6347076 , t=c(0.03951727, 0.96048273),
+                cn=cn, epcol="red",epcex=1,eplwd=3 )
 
 or 
 
+plotModelPeaks( par=sol1[[1]]$par, 
+                cn=cn, epcol="red",epcex=1,eplwd=3 )
 
-plotModelPeaks( par=li1[[1]]$par , selectedPoints=sp , 
-                cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=T)
-
-See Figure4.png.
+See FigureN3.png.
 
 The ePP data.frame above is also returned by plotModelPeaks when assigned (invisible otherwise), as in: 
 
-ePP<-plotModelPeaks( par=li1[[1]]$par , selectedPoints=sp , 
-                cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=T, 
-                preserveMatPatDiff=T , preserveMaxSubClDiff=T )
+ePP<-plotModelPeaks( par=sol1[[1]]$par, 
+                    cn=cn, epcol="red",epcex=1,eplwd=3 )
 
 The function plots the (x,ar) points in ePP, and labels the x-axis to represent 
 integer copy number values in the tumor cells. The function is described in more 
 details below.
 
-Note that peaks 3 and 5 are not captured, these might represent segments that 
-have different copy numbers in different subclones of the tumour. 
-
-###############################################################################
-
-Plotting the solution in li2 (TWO SUBCLONES):
-
-If cn does not already exist, set it using the parameters used in the search:
-
-prepCN(6,2,0.5) 
-
-Given parameters S and t (with sum(t)=1) and copy number configurations cn, the 
-expected peak locations can be obtained with a call to 
-
-ePP <- ePeakPos( par=li2[[1]]$par, cn=cn  )
-
-head(ePP)
-
-  m0 p0 m1 p1 m2 p2          x         ar
-1  1  1  0  0  0  0 0.01251096 0.50000000
-2  1  1  0  1  0  0 0.20856425 0.02999307
-3  1  1  1  0  0  0 0.20856425 0.97000693
-4  1  1  0  2  0  0 0.40461753 0.01546023
-5  1  1  1  1  0  0 0.40461753 0.50000000
-6  1  1  2  0  0  0 0.40461753 0.98453977
-
-
-Here the copy number configurations in cn is broken down into (say) maternal and
-paternal copy numbers (the terms maternal and paternal are used only to 
-distinguish the two chromosomes; the actual parental origin can not
-be derived). m0 and p0 are used for normal cells, m1 and p1 are used for the 
-first subclone, m2 and p2 for the second, etc.
-
-To display the expected peak location onto a "showTumourProfile" graph, the user
-can call:
-
-showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
-        xlim=c(0,2) , nx=200, ny=50  )
-
-prepCN( 6,2,.5) 
-
-plotModelPeaks( par=li2[[1]]$par , selectedPoints=sp , 
-                cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=T, 
-                preserveMatPatDiff=T , preserveMaxSubClDiff=T )
-
-See Figure5.png.
-
-The function plotModelPeaks calls the function ePeakPos, as described above.
-In addition to plotting the $x and $ar values of ePP as points (with control 
-parameters epcol, epcex, eplwd), axis are labeled according to the copy numbers 
-found in subclones. For example, a label taking the value 2.3 indicates that
-segments corresponding to peak found at that location on the x-axis have 2 
-copies in the first subclone and 3 in the second. If addLabels=T, then labels 
-will be assigned to points from ePP that are closest to points in sp.  These 
-labels further indicate the number of parental chromosomes in each 
-subclone, as in 20/21, which indicates that segments contributing to this
-particular peak have 2 maternal (say) copies in the first subclone and 0 
-paternal, and 2 maternal plus 1 paternal copies in the second (we use maternal 
-or paternal solely to distinguish the two chromosomes; the parental origin can 
-not be inferred). Labels can also be manually added with a call of the function
+Each red dot can either be manually labelled by calling 
 
 addLabels( ePP, manual=T)
 
 in which case the user need to left-click an expected peak (the red points in
-Figure5.png) to add a label and right-click the window to exit the function.
+FigureN3.png) to add a label and right-click the window to exit the function.
+Alternatively if all peaks need to be labelled:
 
-Note that one of the observed peak (line 5, or sp[5,]) is annotated with a 4.3 
-profile (4 copies in the first subclone, 3 copies in the second). We selected a 
-single peak near the y=0.5 line, but no such peak is to be expected there due to 
-the fact that a subclone has a an uneven number of copies. That peak is likely 
-made up of two peaks (with labels 22/12) that are so close one another that they  
-merge into a single one.  This would have been apparent if individual segments
-had been plotted. 
+addLabels( ePP, selectedPoints=ePP[, c("x","ar")] ) 
 
-The user can compare the parsimony of the above solution with the one obtained
-in li4:
+Each label added to the plot indicate the values of m1/p1 corresponding to each point; for instance, a 21 label indicates that a segments located at this
+particular peak have 1 maternal and 2 paternal (say) copies (we use maternal 
+or paternal solely to distinguish the two chromosomes; the parental origin can 
+not be inferred. A 12 label has the same interpretation as a 21 label.)
+
+
+###############################################################################
+
+Plotting the solution in sol2 (TWO SUBCLONES):
+
+If cn does not already exist, set it using the parameters used in the search:
+
+prepCN(6,2,1) 
+
+Given parameters S and t (with sum(t)=1) and copy number configurations cn, the 
+expected peak locations can be obtained with a call to 
+
+ePP <- ePeakPos( par=sol2[[1]]$par, cn=cn  )
+
+head(ePP)
+
+  m0 p0 m1 p1 m2 p2          x         ar
+1  1  1  0  0  0  0 0.02509331 0.50000000
+2  1  1  0  1  0  0 0.20651647 0.06075378
+3  1  1  1  0  0  0 0.20651647 0.93924622
+4  1  1  0  0  0  1 0.14847350 0.08450434
+5  1  1  0  0  1  0 0.14847350 0.91549566
+6  1  1  0  1  0  1 0.32989666 0.03803208
+
+
+Here m0 and p0 are used for normal cells, m1 and p1 are used for the 
+first subclone, m2 and p2 for the second subclone, etc.
+
+The solution in sol2 can be displayed using:
 
 showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
         xlim=c(0,2) , nx=200, ny=50  )
 
-prepCN( 6,2,.5) 
+prepCN( 6,2,1) 
 
-plotModelPeaks( par=li4[[1]]$par , selectedPoints=sp , 
-                cn=cn, epcol="red",epcex=1,eplwd=3 , addlabels=T, 
+plotModelPeaks( par=sol2[[1]]$par , 
+                cn=cn, epcol="red",epcex=1,eplwd=3 , 
                 preserveMatPatDiff=T , preserveMaxSubClDiff=T )
 
+See FigureN4.png.
+
+The function plotModelPeaks calls the function ePeakPos, as described above.
+In addition to plotting the $x and $ar values of ePP as points (with control 
+parameters epcol, epcex, eplwd), axis are labeled according to the copy numbers 
+found in subclones. For example, a label on the x-axis taking the value 3.2 
+indicates that segments found at that x-location have 3 copies in the first 
+subclone and 2 in the second.  We can add labels manually using
+
+addLabels( ePP, manual=T)
+
+(see FigureN4.png). 
+
+The labels further indicate the number of parental chromosomes in each 
+subclone, as in 12/11, which indicates that segments contributing to this
+particular peak have 1 maternal and 2 paternal (say) copies in the first 
+subclone and 1 maternal, 1 paternal copy in the second subclone (we use maternal 
+or paternal solely to distinguish the two chromosomes; the parental origin can 
+not be inferred). 
+
+The user can always illustrate more peaks than enumarated in the cn that 
+entered the analysis, simply by calling a different prepCN. E.g.
+
+
+showTumourProfile(copyAr, maxPoints=50000 , flatten=.25 , nlev=20, 
+        xlim=c(0,2) , nx=200, ny=50  )
+
+prepCN( 6,2, 0.5) 
+
+plotModelPeaks( par=sol2[[1]]$par , 
+                cn=cn, epcol="red",epcex=1,eplwd=3 , 
+                preserveMatPatDiff=F  , preserveMaxSubClDiff= F )
+
+The user can appreciate the sheer number of peaks, each corresponding to a 
+potential segment that has the right number of maternal/paternal copies in 
+the different subclones.  The user can refer to ?prepAR and 
+
+ tutorial.1.background_and_methods.txt
+
+as well as help(prepAR) for additional details on the preserveMatPatDiff and
+preserveMaxSubClDiff arguments.  These two arguments can also be passed to
+coverParamSpace, to allow all these additional peaks at the price of increased
+complexity. 
 
 ###############################################################################
 
@@ -161,7 +169,10 @@ To plot copy-number-segment graphs, the read counts first need to be re-scaled.
 The ePP data.frame displays both integer copy-number counts (the m and p 
 columns) and the corresponding expected values for the read count.  ePP is used
 to re-scale read counts: 
+ 
 
+prepCN(12) 
+ePP <- ePeakPos( par=sol1[[1]]$par  , cn=cn  )
 tcs<- scaleReadCounts( tc , ePP )
 
 A column named icopy was added.
@@ -184,10 +195,16 @@ Then segments can be plotted:
 
 # type "cairo" passed to png, to allow for transparency. May not be available.
 # width and height are here expressed in pixels (the default of png)
-plotSegment( tcs,segments, ar , file="segments_page%1d",device="png",width=2*960,height=2*1320, 
-  cex.axis=2, cex.main=2, cex.lab=2, type="cairo", chr=paste( "chr",1:8 , sep="")  ) 
 
+plotSegment( tcs,segments, ar , file="segments_page%1d",device="png",
+             width=960,height=1320, cex.axis=2, cex.main=2, cex.lab=2, 
+             type="cairo" , tlwd=8 , chr=c("chr9","chr12","chr17","chr18")  ) 
 
+# XY chromosomes can't be annotated due to lack of ar values
+segmentsXY<-scaleSegments(t.seg ,  ePP )
+plotSegment( tcs,segmentsXY, ar=NULL , file="segments_pageXY",device="png",
+             width=960,height=1320, cex.axis=2, cex.main=2, cex.lab=2, 
+             type="cairo" , chr=c("chrX","chrY") , tlwd=8) 
 
 
 ###############################################################################
