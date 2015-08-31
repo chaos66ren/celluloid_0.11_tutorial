@@ -17,7 +17,8 @@ then install celluloid 0.11.0 from github:
 
  install.packages("devtools")
  library(devtools)
- install_github("mathieu-lemire/celluloid_0.11", ref="v0.11.0" )
+ #install_github("mathieu-lemire/celluloid_0.11", ref="v0.11.0" )
+install_github("mathieu-lemire/celluloid_0.11" )
 
 Alternatively you can download the source code located at
 
