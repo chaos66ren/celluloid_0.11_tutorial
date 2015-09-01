@@ -3,21 +3,23 @@
 
 ################################################################################
 
-Read INSTALL.txt for instruction on how to install celluloid.
+Celluloid is an R package to estimate ploidy and cellularity from sequence
+data derived from tumours.  (?)
+Read INSTALL.txt for instructions on how to install celluloid.
 
 ################################################################################
+INPUT FILES
 
 Input files used in the tutorial are included in the Data directory. Unzip 
 before use. 
 
-The input .wig files that are needed are passed to functions from the HMMcopy 
-package.  
+The main input files are .wig files that are needed by the HMMcopy package.  
 
 See http://compbio.bccrc.ca/software/hmmcopy/ for instructions on how to turn 
-bam files into wig files, including wig files for gc- and mappability-related 
-data.  Here the files normal.wig, tumour.wig, gc.wig and map.wig contain more 
-than the standard chromosomes. Only the autosomal chromosomes are used in 
-deriving ploidy (autosomal ploidy) and cellularity. 
+traditional bam sequence files into wig files, including wig files for gc- and 
+mappability-related data.  Here the files normal.wig, tumour.wig, gc.wig and 
+map.wig contain more than the standard chromosomes. However, only the autosomal
+chromosomes are used in deriving ploidy (autosomal ploidy) and cellularity. 
 
 The file AR.txt contains the columns:
 
@@ -29,24 +31,27 @@ chr1 754873 16 20
 chr1 755955 26 14
 ...
 
-where each line corresponds to a heterozygous position in the normal,
-where REF_COUNT represents the number of reads supporting the reference
+where each line corresponds to a heterozygous position in the normal tissue.
+REF_COUNT represents the number of reads supporting the reference
 allele in the tumour, and VAR_COUNT represents read counts supporting the
-other allele. 
+other allele.  The header line is required.
 
 ################################################################################
+RUNNING THE PROGRAM
 
-The user can run the pipeline.r script. This script will prepare the data and
-run an analysis that assumes only one clone is present. From the current 
-directory, call:
+As an overview of how to use the package, run the pipeline.r script, which
+performs an analysis assuming one clone is present. To run the script, from 
+the main celluloid directory, call from the command line (make sure to gunzip 
+the Data files first):
 
 Rscript pipeline.r Data/tumour.wig Data/normal.wig Data/gc.wig Data/map.wig Data/AR.txt samplename
 
-Details of each steps of data preparation are found in 
+All data objects will be saved as .rda files in a directory called RdaPipeline.
+The file contour_solutions_samplename_1.pdf will also be created.
+
+Details of each data preparation step are found in 
 
  tutorial.2.load_and_show.txt
-
-All data objects are saved in .rda files in a RdaPipeline directory.
 
 The analysis uses the segment-based objective function, further described in 
 
@@ -55,7 +60,7 @@ The analysis uses the segment-based objective function, further described in
 The value of this objective function is an ad hoc measurement of the weighted
 fraction of the tumour genome that is captured by the model, defined by values
 of ploidy, cellularity and subclonal proportions. Another objective function,
-suited for manual interventions, in also described in the above tutorial file. 
+suited for manual interventions, is also described in the above tutorial file. 
 
 The search is done by a call of the function coverParamSpace.
 
@@ -66,7 +71,7 @@ Local solutions are found in a graphical output. See file
 
  Figures/contour_solutions_samplename_1.pdf
 
-The first panel represents the values of the objective function as a function of 
+The first panel represents the values of the objective function as a function of
 the parameter n (the percentage of normal cells in the sequenced sample). This 
 is to help the user judge if the parameter space was well covered. 
 
