@@ -207,4 +207,12 @@ plotSegment( tcs,segmentsXY, ar=NULL , file="segments_pageXY",device="png",
              type="cairo" , chr=c("chrX","chrY") , tlwd=8) 
 
 
+Note that the data provided in this tutorial come from an actual tumor that was 
+sequenced.  But to further protect the confidentiality of the patient, the 
+positions of the heterozygous genotypes that are reported in the AR.txt file 
+were randomly generated in silico, within each segment. This created some 
+artifacts that can be seen in the segment plots in the AR tabs (e.g. 
+chr9:33-45Mbp, chr17:17-22Mbp,...)
+
+
 ###############################################################################
