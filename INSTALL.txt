@@ -7,7 +7,7 @@ Check for a newer version at
 
  https://github.com/mathieu-lemire/celluloid_0.11/blob/master/INSTALL
 
-Install bioconductor dependencies first:
+Install dependencies from Bioconductor first (from within R):
 
  source("http://bioconductor.org/biocLite.R")
  biocLite("HMMcopy")
