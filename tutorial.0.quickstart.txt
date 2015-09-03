@@ -37,7 +37,7 @@ allele in the tumour, and VAR_COUNT represents read counts supporting the
 other allele.  The header line is required.
 
 ################################################################################
-RUNNING THE PROGRAM
+RUNNING THE EXAMPLE
 
 As an overview of how to use the package, run the pipeline.r script, which
 performs an analysis assuming one clone is present. To run the script, from 
@@ -49,31 +49,10 @@ Rscript pipeline.r Data/tumour.wig Data/normal.wig Data/gc.wig Data/map.wig Data
 All data objects will be saved as .rda files in a directory called RdaPipeline.
 The file contour_solutions_samplename_1.pdf will also be created.
 
-Details of each data preparation step are found in 
-
- tutorial.2.load_and_show.txt
-
-The analysis uses the segment-based objective function, further described in 
-
- tutorial.3.select_and_search.txt
-
-The value of this objective function is an ad hoc measurement of the weighted
-fraction of the tumour genome that is captured by the model, defined by values
-of ploidy, cellularity and subclonal proportions. Another objective function,
-suited for manual interventions, is also described in the above tutorial file. 
-
-The search is done by a call of the function coverParamSpace.
-
-Local maxima of the objective function are found by using the optim() function 
-in R with 50 randomly chosen starting points.  
- 
-Local solutions are found in a graphical output. See file 
-
- Figures/contour_solutions_samplename_1.pdf
-
-The first panel represents the values of the objective function as a function of
-the parameter n (the percentage of normal cells in the sequenced sample). This 
-is to help the user judge if the parameter space was well covered. 
+In the pdf file, the first panel represents the values of the objective 
+function as a function of the parameter n (the percentage of normal cells in 
+the sequenced sample). This is to help the user judge if the parameter space 
+was well covered.  (Do you have any tips as to how to judge that?)
 
 Then local solutions are shown in a series of contour plots. The x-axis 
 represents the (scaled) read counts in tumour segments, and the y-axis 
@@ -85,6 +64,36 @@ The red dots and lines represent the integer copy-number states and allelic
 ratios that are predicted given the estimates of tumour ploidy and cellularity. 
 The value of the objective function at the local solution is displayed on the 
 top left corner. 
+
+What is the major difference between the 6 plots?  How were they chosen out
+of all possible plots?
+
+################################################################################
+DETAILS
+
+Details of the data preparation steps are found in 
+
+ tutorial.2.load_and_show.txt
+
+The analysis uses the segment-based objective function, further described in 
+
+ tutorial.3.select_and_search.txt
+
+The value of this objective function is an ad hoc measurement of the weighted
+fraction of the tumour genome that is captured by the model, defined by values
+of ploidy, cellularity and subclonal proportions. Another objective function,
+suited for manual interventions, is also described in the above tutorial file. 
+(Which file?  tutorial.2 or tutorial.3?)
+
+The search is done by a call of the function coverParamSpace.
+
+Local maxima of the objective function are found by using the optim() function 
+in R with 50 randomly chosen starting points.  
+ 
+Local solutions are found in a graphical output. See file 
+
+ Figures/contour_solutions_samplename_1.pdf
+
 
 Details about the figures can be found in 
 
@@ -124,10 +133,3 @@ plotSegment( tcs,segmentsXY, ar=NULL , file="segments_pageXY",device="png",
 To fit two or more subclones, the user can refer to 
 
   tutorial.3.select_and_search
-
-
-
-
-
-
-
