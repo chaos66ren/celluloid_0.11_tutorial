@@ -3,6 +3,10 @@
 
 ################################################################################
 
+CELLULOID, an R package, is a pragmatic tool to evaluate ploidy, cellularity, 
+clonal and sub-clonal populations from tumour whole genome sequencing data, and 
+to appropriately derive absolute copy numbers profiles. 
+
 Read INSTALL.txt for instructions on how to install celluloid.
 
 Check your version of celluloid using
@@ -16,13 +20,12 @@ You can download the tutorial files and data at
 
  https://github.com/mathieu-lemire/celluloid_0.11_tutorial/releases
 
-
 The online tutorial files found at 
 
  https://github.com/mathieu-lemire/celluloid_0.11_tutorial 
 
 are continuously being updated. You can browse them online, but it is best if 
-you first select a version (the latest is 0.11.0.x) from the "Branch" drop down 
-menu (under "Tags"), accessible from the above link. 
+you first select the version 0.11.0.x with the highest x, from the "Branch" drop 
+down menu (under "Tags"), accessible from the above link. 
 
 
