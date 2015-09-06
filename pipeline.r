@@ -11,7 +11,7 @@ argv<-commandArgs( trailing=TRUE )
 
 argc<-length(argv)
 if( argc!=6 ){ 
-  stop("Usage: Rscrip pipeline.r tumourWigFile normalWigFile gcWigFile mapWigFile arFile samplename") }
+  stop("Usage: Rscript pipeline.r tumourWigFile normalWigFile gcWigFile mapWigFile arFile samplename") }
 
 ##############
 # prepare data
