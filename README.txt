@@ -20,6 +20,8 @@ You can download the tutorial files and data at
 
  https://github.com/mathieu-lemire/celluloid_0.11_tutorial/releases
 
+(select the most recent v0.11.0.x version)
+
 The online tutorial files found at 
 
  https://github.com/mathieu-lemire/celluloid_0.11_tutorial 
