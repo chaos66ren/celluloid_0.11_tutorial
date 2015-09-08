@@ -38,6 +38,32 @@ REF_COUNT represents the number of reads supporting the reference
 allele in the tumour, and VAR_COUNT represents read counts supporting the
 other allele.  The header line is required.
 
+This file can be created from vcf files using the vcf2het.csh script provided:
+
+ vcf2het.csh filename.vcf tumor_column_name output min_depth
+
+Where filename.vcf is the name of the vcf file that contains tumor and normal
+genotypes; tumor_column_name if the name of the column (either column 10 or 11) 
+in filename.vcf that contains tumor data; output is the name of the output file; 
+and min_depth in an integer value indicating that only heterozygous positions
+supported by at least that many reads in the normal will be extracted. Only
+lines with FILTER value equal to PASS will be extracted.  
+
+Example: 
+
+Iff somatic_calls.vcf contains the following header
+
+#CHROM POS ID REF ALT QUAL FILTER INFO FORMAT Blood PancAdenocarcinoma
+
+and only heterozygous positions supported by at least 30 reads are to be used,
+then the call
+
+ vcf2het.csh somatic_calls.vcf PancAdenocarcinoma ARoutput.txt 30
+
+will create the file ARoutput.txt.  Since the column name PancAdenocarcinoma was 
+found in column 11, data for the normal tissue are assumed to be found in 
+column 10. 
+
 ################################################################################
 RUNNING THE EXAMPLE
 
