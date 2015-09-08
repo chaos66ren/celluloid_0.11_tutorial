@@ -1,14 +1,13 @@
 #!/bin/csh
 
 
-
-
-# vcf file has to be in current directory, e.g. a symlink
-
+# vcf file
 set vcf = $argv[1]
-# name of tumor sample. 
+# name of the column that contains tumor data 
 set name = $argv[2]
+# name of the output file 
 set out = $argv[3]
+# only extract het positions supported by that many reads in the normal
 set mindepth = $argv[4]
 
 set field = `awk '{if($1=="#CHROM"){for( i=10;i<=11;i++){if($i=="'$name'"){print i} };exit}}' $vcf`
