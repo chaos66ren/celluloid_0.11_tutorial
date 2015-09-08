@@ -154,7 +154,8 @@ Sn<-  summary(nnllss)$coefficients[1,1]
 Sn
 [1] 0.03637208
 
-The value Sn also represents the scaled read count expected in regions where all copies were deleted in the tumor (where reads only come from the normal 
+The value Sn also represents the scaled read count expected in regions where all 
+copies were deleted in the tumor (where reads only come from the normal 
 tissues).
 
 We can plot the LOH curve corresponding to Sn:
@@ -232,7 +233,8 @@ sp
 There can only be one non-zero entry in the third column of sp. No more than 9 
 copies in a subclone can be specified. 
 
-In a 3-subclone model, the 3-digit value 224 would indicate 2 copies in the first subclone, 2 in the second and 4 in the third.
+In a 3-subclone model, the 3-digit value 224 would indicate 2 copies in the 
+first subclone, 2 in the second and 4 in the third.
 
 The peak is forced by adding a penalty to the objective function, with control 
 parameters penaltymultiplier and penaltymultipliery in coverParamSpace. These
