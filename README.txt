@@ -3,6 +3,8 @@
 
 ################################################################################
 
+@CELLULOID_R for updates.
+
 CELLULOID, an R package, is a tool to evaluate ploidy, cellularity, clonal and 
 sub-clonal populations from tumour whole genome sequencing data, and to 
 appropriately derive absolute copy numbers profiles. 
