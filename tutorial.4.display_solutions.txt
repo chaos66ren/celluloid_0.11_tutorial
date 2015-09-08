@@ -56,7 +56,8 @@ plotModelPeaks( par=sol1[[1]]$par,
 
 See FigureN3.png.
 
-The ePP data.frame above is also returned by plotModelPeaks when assigned (invisible otherwise), as in: 
+The ePP data.frame above is also returned by plotModelPeaks when assigned 
+(invisible otherwise), as in: 
 
 ePP<-plotModelPeaks( par=sol1[[1]]$par, 
                     cn=cn, epcol="red",epcex=1,eplwd=3 )
@@ -75,7 +76,8 @@ Alternatively if all peaks need to be labelled:
 
 addLabels( ePP, selectedPoints=ePP[, c("x","ar")] ) 
 
-Each label added to the plot indicate the values of m1/p1 corresponding to each point; for instance, a 21 label indicates that a segments located at this
+Each label added to the plot indicate the values of m1/p1 corresponding to each 
+point; for instance, a 21 label indicates that a segments located at this
 particular peak have 1 maternal and 2 paternal (say) copies (we use maternal 
 or paternal solely to distinguish the two chromosomes; the parental origin can 
 not be inferred. A 12 label has the same interpretation as a 21 label.)
