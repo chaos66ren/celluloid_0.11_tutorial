@@ -20,7 +20,7 @@ The main input files are .wig files that are needed by the HMMcopy package.
 See http://compbio.bccrc.ca/software/hmmcopy/ for instructions on how to turn 
 traditional bam sequence files into wig files, including wig files for gc- and 
 mappability-related data.  Here the files normal.wig, tumour.wig, gc.wig and 
-map.wig contain more than the standard chromosomes. However, only the autosomal
+map.wig contain more than the standard chromosomes. However, only the autosomal 
 chromosomes are used in deriving ploidy (autosomal ploidy) and cellularity. 
 
 The file AR.txt contains the columns:
@@ -51,7 +51,7 @@ lines with FILTER value equal to PASS will be extracted.
 
 Example: 
 
-Iff somatic_calls.vcf contains the following header
+If somatic_calls.vcf contains the following header
 
 #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT Blood PancAdenocarcinoma
 
@@ -64,40 +64,20 @@ will create the file ARoutput.txt.  Since the column name PancAdenocarcinoma was
 found in column 11, data for the normal tissue are assumed to be found in 
 column 10. 
 
+
 ################################################################################
 RUNNING THE EXAMPLE
 
 As an overview of how to use the package, run the pipeline.r script, which
-performs an analysis assuming one clone is present. To run the script, from 
+performs an analysis assuming only one clone is present. To run the script, from 
 the main celluloid directory, call from the command line (make sure to gunzip 
 the Data files first):
 
 Rscript pipeline.r Data/tumour.wig Data/normal.wig Data/gc.wig Data/map.wig Data/AR.txt samplename
 
-All data objects will be saved as .rda files in a directory called RdaPipeline.
-The file contour_solutions_samplename_1.pdf will also be created.
-
-In the pdf file, the first panel represents the values of the objective 
-function as a function of the parameter n (the percentage of normal cells in 
-the sequenced sample). This is to help the user judge if the parameter space 
-was well covered.  (Do you have any tips as to how to judge that?)
-
-Then local solutions are shown in a series of contour plots. The x-axis 
-represents the (scaled) read counts in tumour segments, and the y-axis 
-represents values for the allelic ratios (proportion of reads supporting the 
-reference allele) evaluated at germline heterozygous positions in those 
-segments. White dots in the graphs represent actual segments. 
-
-The red dots and lines represent the integer copy-number states and allelic 
-ratios that are predicted given the estimates of tumour ploidy and cellularity. 
-The value of the objective function at the local solution is displayed on the 
-top left corner. 
-
-What is the major difference between the 6 plots?  How were they chosen out
-of all possible plots?
-
-################################################################################
-DETAILS
+This script prepares the data and run the analysis. All data objects will be 
+saved as .rda files in a directory called RdaPipeline. The file 
+contour_solutions_samplename_1.pdf will also be created.  
 
 Details of the data preparation steps are found in 
 
@@ -110,18 +90,31 @@ The analysis uses the segment-based objective function, further described in
 The value of this objective function is an ad hoc measurement of the weighted
 fraction of the tumour genome that is captured by the model, defined by values
 of ploidy, cellularity and subclonal proportions. Another objective function,
-suited for manual interventions, is also described in the above tutorial file. 
-(Which file?  tutorial.2 or tutorial.3?)
+suited for manual interventions, in also described in the tutorial.3 file. 
 
-The search is done by a call of the function coverParamSpace.
+The search for a solution is done by a call of the function coverParamSpace.
 
 Local maxima of the objective function are found by using the optim() function 
 in R with 50 randomly chosen starting points.  
  
-Local solutions are found in a graphical output. See file 
+Local solutions are found in the graphical output. See file 
 
  Figures/contour_solutions_samplename_1.pdf
 
+The first panel represents the values of the objective function as a function of 
+the parameter n (the percentage of normal cells in the sequenced sample). This 
+is to help the user judge if the parameter space was well covered. 
+
+Then local solutions are shown in a series of contour plots. The x-axis 
+represents the (scaled) read counts in tumour segments, and the y-axis 
+represents values for the allelic ratios (proportion of reads supporting the 
+reference allele) evaluated at germline heterozygous positions in those 
+segments. White dots in the graphs represent actual segments. 
+
+The red dots and lines represent the integer copy-number states and allelic 
+ratios that are predicted given the estimates of tumour ploidy and cellularity. 
+The value of the objective function at the local solution is displayed on the 
+top left corner. 
 
 Details about the figures can be found in 
 
@@ -161,3 +154,10 @@ plotSegment( tcs,segmentsXY, ar=NULL , file="segments_pageXY",device="png",
 To fit two or more subclones, the user can refer to 
 
   tutorial.3.select_and_search
+
+
+
+
+
+
+
