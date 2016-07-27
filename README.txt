@@ -15,8 +15,8 @@ Check your version of celluloid using
 
  library( help=celluloid )
 
-The current version of celluloid is 0.11.1. Each version of celluloid has its 
-own version of the tutorial files.  Look for tutorial files v0.11.1
+The current version of celluloid is 0.11.2. Each version of celluloid has its 
+own version of the tutorial files.  Look for tutorial files v0.11.2
 
 You can download the tutorial files and data at
 
