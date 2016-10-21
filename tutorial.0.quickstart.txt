@@ -15,6 +15,9 @@ INPUT FILES
 Input files used in the tutorial are included in the Data directory. Unzip 
 before use. 
 
+CELLULOID expects chromosome numbering to include the prefix "chr", as in 
+chr1, chr2, ... Chromosomes X and Y can be labelled chrX chrY or chr23 chr24. 
+
 The main input files are .wig files that are needed by the HMMcopy package.  
 
 See http://compbio.bccrc.ca/software/hmmcopy/ for instructions on how to turn 
