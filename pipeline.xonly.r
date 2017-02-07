@@ -29,8 +29,7 @@ name<-argv[4]
 if( !file.exists("RdaPipeline/tc.rda") ){
   # load and segment tumor data
   t <- wigsToRangedData( tumourWigFile, gcWigFile, mapWigFile )
-  # workaround for a bug is to reduce samplesize
-  tc<-gcCorrect( t, sampletype="tumor", samplesize=25000 )
+  tc<-gcCorrect( t, sampletype="tumor" )
   t.seg <- segmentSeqData( tc , k=10 , gamma=50  )
   save( t.seg, file="RdaPipeline/t.seg.rda")
   save( tc, file="RdaPipeline/tc.rda")
@@ -82,6 +81,26 @@ for( i in 1:nrow(localSolutions) ){
   legend( 0,1, floor(1000*( lm[[r]]$value) )/10, bg="white"  )
 }
 dev.off() 
+
+
+#############################
+# say solution 1 is preferred
+# rescaling and plotting
+#############################
+
+
+chosensol <- 1 
+r<-as.numeric(rownames(localSolutions)[chosensol] )
+par<-lm[[r]]$par 
+
+prepCN(12,1,NULL)
+ePP<-ePeakPos( par=par , cn=cn , xonly=TRUE  )
+tcs<- scaleReadCounts( tc , ePP )
+segments<-scaleSegments(t.seg ,  ePP )
+
+plotSegment( tcs,segments , file="segments_page%1d",device="png",
+             width=960,height=1320, cex.axis=2, cex.main=2, cex.lab=2, 
+             type="cairo" , tlwd=8 ) 
 
 
 
