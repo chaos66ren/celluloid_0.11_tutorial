@@ -3,7 +3,8 @@
 # Assuming low coverage here, so that larger bins (e.g. 50000kb) are used 
 #
 # Usage:
-# Rscript pipeline.r Data/tumour.wig Data/gc.wig Data/map.wig samplename
+# R --no-save --args Data/tumour.wig Data/gc.wig Data/map.wig samplename
+# source("pipeline.xonly.r") 
 
 library(celluloid)
 
@@ -84,23 +85,28 @@ dev.off()
 
 
 #############################
-# say solution 1 is preferred
+# pick a solution
 # rescaling and plotting
 #############################
 
-
-chosensol <- 1 
-r<-as.numeric(rownames(localSolutions)[chosensol] )
-par<-lm[[r]]$par 
-
-prepCN(12,1,NULL)
-ePP<-ePeakPos( par=par , cn=cn , xonly=TRUE  )
-tcs<- scaleReadCounts( tc , ePP )
-segments<-scaleSegments(t.seg ,  ePP )
-
-plotSegment( tcs,segments , file="segments_page%1d",device="png",
-             width=960,height=1320, cex.axis=2, cex.main=2, cex.lab=2, 
-             type="cairo" , tlwd=8 ) 
-
-
+if( TRUE ){ 
+  
+  cat( "Choose solution from ", 1,"..",nrow(localSolutions) ,";  0 if skip\n") 
+  print(localSolutions)
+  
+  chosensol <-as.integer( readLines(n=1) )
+  
+  r<-as.numeric(rownames(localSolutions)[chosensol] )
+  par<-lm[[r]]$par 
+  
+  prepCN(12,1,NULL)
+  ePP<-ePeakPos( par=par , cn=cn , xonly=TRUE  )
+  tcs<- scaleReadCounts( tc , ePP )
+  segments<-scaleSegments(t.seg ,  ePP )
+  
+  plotSegment( tcs,segments , file="segments_page%1d",device="png",
+               width=960,height=1320, cex.axis=2, cex.main=2, cex.lab=2, 
+               type="cairo" , tlwd=8 ) 
+  
+}
 
