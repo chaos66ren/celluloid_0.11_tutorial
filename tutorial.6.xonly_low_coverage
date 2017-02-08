@@ -38,13 +38,9 @@ instead of the segment arguement:
 
  coverParamSpace( copyAr=copyAr,xonly=TRUE, ... )
 
-Other functions that need to explicitely specify a xonly=TRUE argument 
-include:
+The other functions that need to explicitely specify the xonly=TRUE argument 
+are:
 
    ePeakPos( ... , xonly=TRUE  )
    plotModelPeaks(..., xonly=TRUE )
-
-
-
-
 
