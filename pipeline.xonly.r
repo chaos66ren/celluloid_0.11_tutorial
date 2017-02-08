@@ -3,7 +3,7 @@
 # Assuming low coverage here, so that larger bins (e.g. 50000kb) are used 
 #
 # Usage:
-# R --no-save --args Data/tumour.wig Data/gc.wig Data/map.wig samplename
+# R --no-save --args Data/tumor_50k.wig Data/gc_50k.wig Data/map_50k.wig samplename
 # source("pipeline.xonly.r") 
 
 library(celluloid)

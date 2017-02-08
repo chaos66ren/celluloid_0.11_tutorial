@@ -1,0 +1,50 @@
+0        1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+
+################################################################################
+
+For low coverage sequencing data, allelic ratio data may involve too few reads
+at each heterozygous position to be reliable.  With the use of the "xonly"
+argument, a number of functions will ignore allelic ratio data. 
+
+The file pipeline.xonly.r illustrates this. It uses the input file
+
+ tumour_50k.wig (generated from about 6M reads) 
+ gc_50k.wig
+ map_50k.wig
+
+and doesn't make use of normal data. Because of the low coverage, we extended
+the bin size to 50kb. 
+
+Construction of the copyAr object from the call
+
+   copyAr<-  prepCopyAr(seg= t.seg,  tumourrangedata= tc , xonly=TRUE  )
+
+is done similarly as before, except that it is now populated with fake het
+positions in each segment (at each 50kb by default) with counts of reference
+and alternative alleles each set at 50. This is a workaround so that search
+and display functions can be used with minimal reimplementations. 
+
+Even though the allelic ratio axis is not used nor interpretable, we preserved 
+the 2d contour look from the showTumourProfile function, simply by adding some
+variability to the ref and alt columns.  Because the x-axis is now the only one
+relevant, the y-axis is not labeled nor annotated.
+
+The search is again done with a call of the function coverParamSpace, this time
+with the xonly=TRUE argument. The two objective functions described in file
+tutorial.3.search_solutions.txt are available. The only difference is for the
+segment-based one, which must be called this time using the copyAr argument
+instead of the segment arguement:
+
+ coverParamSpace( copyAr=copyAr,xonly=TRUE, ... )
+
+Other functions that need to explicitely specify a xonly=TRUE argument 
+include:
+
+   ePeakPos( ... , xonly=TRUE  )
+   plotModelPeaks(..., xonly=TRUE )
+
+
+
+
+
